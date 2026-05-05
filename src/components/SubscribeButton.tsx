@@ -1,0 +1,136 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { Bell, BellRing, Check } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
+
+interface SubscribeButtonProps {
+  creatorId: string;
+  initialSubscribed?: boolean;
+  onCountChange?: (delta: number) => void;
+  size?: "sm" | "default" | "lg";
+  className?: string;
+}
+
+export function SubscribeButton({
+  creatorId,
+  initialSubscribed = false,
+  onCountChange,
+  size = "default",
+  className,
+}: SubscribeButtonProps) {
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const [subscribed, setSubscribed] = useState(initialSubscribed);
+  const [notify, setNotify] = useState(false);
+  const [pending, setPending] = useState(false);
+
+  // Sync subscription status whenever the viewer or creator changes
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      if (!user || !creatorId) {
+        setSubscribed(false);
+        return;
+      }
+      const { data } = await supabase
+        .from("subscriptions")
+        .select("id")
+        .eq("creator_id", creatorId)
+        .eq("subscriber_id", user.id)
+        .maybeSingle();
+      if (active) setSubscribed(!!data);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [user, creatorId]);
+
+  const isSelf = user?.id === creatorId;
+
+  const handleClick = async () => {
+    if (!isAuthenticated || !user) {
+      toast.error("Sign in to subscribe");
+      navigate({ to: "/login" });
+      return;
+    }
+    if (isSelf) {
+      toast.error("You can't subscribe to yourself");
+      return;
+    }
+    if (pending) return;
+
+    const next = !subscribed;
+    setSubscribed(next);
+    setPending(true);
+    onCountChange?.(next ? 1 : -1);
+
+    if (next) {
+      const { error } = await supabase
+        .from("subscriptions")
+        .insert({ creator_id: creatorId, subscriber_id: user.id });
+      if (error && error.code !== "23505") {
+        setSubscribed(false);
+        onCountChange?.(-1);
+        toast.error("Couldn't subscribe");
+      } else {
+        toast.success("Subscribed", { description: "You'll see new videos in your feed." });
+      }
+    } else {
+      const { error } = await supabase
+        .from("subscriptions")
+        .delete()
+        .eq("creator_id", creatorId)
+        .eq("subscriber_id", user.id);
+      if (error) {
+        setSubscribed(true);
+        onCountChange?.(1);
+        toast.error("Couldn't unsubscribe");
+      } else {
+        setNotify(false);
+      }
+    }
+    setPending(false);
+  };
+
+  return (
+    <div className={cn("inline-flex items-center gap-2", className)}>
+      <Button
+        onClick={handleClick}
+        size={size}
+        className={cn(
+          "rounded-full font-semibold transition-all duration-200",
+          subscribed
+            ? "bg-secondary text-foreground hover:bg-secondary/80 border border-glass-border"
+            : "bg-gradient-primary text-white border-0 hover:opacity-90 glow-primary",
+        )}
+      >
+        {subscribed ? (
+          <>
+            <Check className="h-4 w-4" /> Subscribed
+          </>
+        ) : (
+          "Subscribe"
+        )}
+      </Button>
+      {subscribed && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setNotify((n) => !n)}
+          className="rounded-full glass h-9 w-9"
+          aria-label="Toggle notifications"
+        >
+          {notify ? (
+            <BellRing className="h-4 w-4 text-primary" />
+          ) : (
+            <Bell className="h-4 w-4" />
+          )}
+        </Button>
+      )}
+    </div>
+  );
+}
