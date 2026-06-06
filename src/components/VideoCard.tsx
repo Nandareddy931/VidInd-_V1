@@ -19,12 +19,19 @@ export function VideoCard({ video, index = 0 }: { video: Video; index?: number }
               alt={video.title}
               loading="lazy"
               className="h-full w-full object-cover transition-smooth group-hover:scale-105"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+                const fallback = e.currentTarget.nextElementSibling as HTMLElement | null;
+                if (fallback) fallback.style.display = "flex";
+              }}
             />
-          ) : (
-            <div className="h-full w-full flex items-center justify-center text-white/80 text-4xl font-extrabold">
-              {video.channelInitial}
-            </div>
-          )}
+          ) : null}
+          <div
+            className="h-full w-full flex items-center justify-center text-white/80 text-4xl font-extrabold"
+            style={{ display: video.thumbnail ? "none" : "flex" }}
+          >
+            {video.channelInitial}
+          </div>
         </div>
         {/* duration */}
         {video.duration && (

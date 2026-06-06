@@ -41,7 +41,7 @@ export function dbVideoToCard(v: DbVideo, channelName?: string): Video & { video
   return {
     id: v.id,
     title: v.title,
-    thumbnail: v.thumbnail_url || "",
+    thumbnail: v.thumbnail_url ?? "",
     channel: name,
     channelInitial: (name[0] ?? "U").toUpperCase(),
     views: formatViews(v.views ?? 0),

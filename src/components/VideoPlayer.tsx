@@ -42,8 +42,13 @@ export function VideoPlayer({ src, poster, type, onReady, onWatchProgress }: Pro
         fluid: true,
         playsinline: true,
         preload: "metadata",
-        poster,
+        poster: poster || undefined,
         sources: src ? [{ src, type: type ?? guessType(src) }] : [],
+        // Restrict to HTML5 only — prevents video.js probing Flash/SWF (404s)
+        techOrder: ["html5"],
+        html5: { nativeVideoTracks: false, nativeAudioTracks: false, nativeCaptions: false },
+        errorDisplay: false,
+        loadingSpinner: true,
       },
       () => onReady?.(player),
     );

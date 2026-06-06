@@ -105,14 +105,17 @@ function UploadPage() {
       if (upErr) throw upErr;
       setProgress(90);
 
+      // Store the Supabase storage path so it resolves correctly for both
+      // public and private buckets via resolveVideoUrl / signed URLs.
       const { data: pub } = supabase.storage.from("videos").getPublicUrl(path);
+      const videoUrl = pub.publicUrl;
 
       const { error: dbErr } = await supabase.from("videos").insert({
         user_id: userId,
         title: title.trim(),
         description: description.trim() || null,
         category,
-        video_url: pub.publicUrl,
+        video_url: videoUrl,
         visibility,
       });
 

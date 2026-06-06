@@ -151,12 +151,19 @@ function ContentManager() {
                     src={v.thumbnail_url}
                     alt=""
                     className="h-20 w-32 rounded-lg object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                      const fb = e.currentTarget.nextElementSibling as HTMLElement | null;
+                      if (fb) fb.style.display = "flex";
+                    }}
                   />
-                ) : (
-                  <div className="h-20 w-32 rounded-lg bg-gradient-hero flex items-center justify-center">
-                    <ImageIcon className="h-6 w-6 text-white/70" />
-                  </div>
-                )}
+                ) : null}
+                <div
+                  className="h-20 w-32 rounded-lg bg-gradient-hero flex items-center justify-center"
+                  style={{ display: v.thumbnail_url ? "none" : "flex" }}
+                >
+                  <ImageIcon className="h-6 w-6 text-white/70" />
+                </div>
                 <span className="absolute inset-0 rounded-lg bg-black/50 opacity-0 group-hover:opacity-100 transition-smooth flex items-center justify-center text-xs text-white">
                   Change
                 </span>
@@ -336,7 +343,15 @@ function VideoEditorModal({
               }`}
             >
               {thumbPreview ? (
-                <img src={thumbPreview} alt="" className="h-full w-full object-cover" />
+                <img
+                  src={thumbPreview}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                    setThumbPreview(null);
+                  }}
+                />
               ) : (
                 <div className="h-full w-full flex flex-col items-center justify-center text-muted-foreground gap-1">
                   <ImageIcon className="h-7 w-7" />

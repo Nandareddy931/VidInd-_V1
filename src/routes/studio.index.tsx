@@ -177,10 +177,22 @@ function StudioDashboard() {
               } hover:bg-white/5 transition-smooth`}
             >
               {v.thumbnail_url ? (
-                <img src={v.thumbnail_url} alt="" loading="lazy" className="h-16 w-28 rounded-lg object-cover" />
-              ) : (
-                <div className="h-16 w-28 rounded-lg bg-gradient-hero" />
-              )}
+                <img
+                  src={v.thumbnail_url}
+                  alt=""
+                  loading="lazy"
+                  className="h-16 w-28 rounded-lg object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                    const fb = e.currentTarget.nextElementSibling as HTMLElement | null;
+                    if (fb) fb.style.display = "block";
+                  }}
+                />
+              ) : null}
+              <div
+                className="h-16 w-28 rounded-lg bg-gradient-hero"
+                style={{ display: v.thumbnail_url ? "none" : "block" }}
+              />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold line-clamp-1">{v.title}</p>
                 <p className="text-xs text-muted-foreground">{formatNum(v.views ?? 0)} views</p>

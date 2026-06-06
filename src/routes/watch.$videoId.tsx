@@ -414,10 +414,17 @@ function UpNextItem({ video }: { video: Video }) {
             alt=""
             loading="lazy"
             className="h-full w-full object-cover transition-smooth group-hover:scale-105"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+              const fb = e.currentTarget.nextElementSibling as HTMLElement | null;
+              if (fb) fb.style.display = "block";
+            }}
           />
-        ) : (
-          <div className="h-full w-full bg-gradient-hero" />
-        )}
+        ) : null}
+        <div
+          className="h-full w-full bg-gradient-hero"
+          style={{ display: video.thumbnail ? "none" : "block" }}
+        />
         {video.duration && (
           <span className="absolute bottom-1 right-1 rounded-md bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur">
             {video.duration}
