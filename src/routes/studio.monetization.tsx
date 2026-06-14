@@ -29,26 +29,9 @@ function MonetizationPage() {
             Monetization coming soon 🚀
           </h2>
           <p className="mt-2 text-muted-foreground max-w-md mx-auto">
-            Better earnings for new creators than any other platform. Get rewarded from day one.
+            Better earnings for new creators than any other platform.
           </p>
 
-          <div className="mt-8 grid sm:grid-cols-2 gap-3 max-w-lg mx-auto">
-            <div className="glass-strong rounded-2xl p-4 text-left">
-              <Users className="h-5 w-5 text-accent" />
-              <p className="mt-2 text-sm font-semibold">1,000 subscribers</p>
-              <p className="text-xs text-muted-foreground">Build your audience</p>
-            </div>
-            <div className="glass-strong rounded-2xl p-4 text-left">
-              <Clock className="h-5 w-5 text-accent" />
-              <p className="mt-2 text-sm font-semibold">4,000 watch hours</p>
-              <p className="text-xs text-muted-foreground">In the past 12 months</p>
-            </div>
-          </div>
-
-          <div className="mt-8 inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-xs">
-            <Sparkles className="h-3.5 w-3.5 text-accent" />
-            <span>You'll be notified when monetization opens</span>
-          </div>
         </div>
       </div>
     </>

@@ -20,7 +20,7 @@ function RewardsPage() {
         </div>
       </div>
 
-      <div className="mt-6 rounded-3xl bg-gradient-primary p-6 md:p-8 glow-primary shadow-elevated relative overflow-hidden">
+      {/* <div className="mt-6 rounded-3xl bg-gradient-primary p-6 md:p-8 glow-primary shadow-elevated relative overflow-hidden">
         <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-accent/30 blur-3xl" />
         <div className="relative flex items-center justify-between flex-wrap gap-4">
           <div>
@@ -32,7 +32,7 @@ function RewardsPage() {
           </div>
           <Coins className="h-20 w-20 text-white/40 animate-float" />
         </div>
-      </div>
+      </div> */}
 
       <div className="mt-8 glass rounded-3xl p-10 text-center max-w-xl mx-auto">
         <h3 className="text-lg font-bold">Rewards coming soon</h3>

@@ -16,30 +16,142 @@ export type Database = {
     Tables: {
       comments: {
         Row: {
-          content: string
-          created_at: string
           id: string
-          updated_at: string
-          user_id: string
           video_id: string
+          user_id: string
+          parent_comment_id: string | null
+          comment_text: string
+          likes_count: number
+          is_pinned: boolean
+          is_hidden: boolean
+          is_reported: boolean
+          is_reviewed: boolean
+          created_at: string
+          updated_at: string
         }
         Insert: {
-          content: string
-          created_at?: string
           id?: string
-          updated_at?: string
-          user_id: string
           video_id: string
+          user_id: string
+          parent_comment_id?: string | null
+          comment_text: string
+          likes_count?: number
+          is_pinned?: boolean
+          is_hidden?: boolean
+          is_reported?: boolean
+          is_reviewed?: boolean
+          created_at?: string
+          updated_at?: string
         }
         Update: {
-          content?: string
-          created_at?: string
           id?: string
-          updated_at?: string
-          user_id?: string
           video_id?: string
+          user_id?: string
+          parent_comment_id?: string | null
+          comment_text?: string
+          likes_count?: number
+          is_pinned?: boolean
+          is_hidden?: boolean
+          is_reported?: boolean
+          is_reviewed?: boolean
+          created_at?: string
+          updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "comments_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "comments_parent_comment_id_fkey"
+            columns: ["parent_comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      comment_likes: {
+        Row: {
+          id: string
+          comment_id: string
+          user_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          comment_id: string
+          user_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          comment_id?: string
+          user_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comment_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          }
+        ]
+      }
+      blocked_users: {
+        Row: {
+          id: string
+          blocker_id: string
+          blocked_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          blocker_id: string
+          blocked_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          blocker_id?: string
+          blocked_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocked_users_blocker_id_fkey"
+            columns: ["blocker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "blocked_users_blocked_id_fkey"
+            columns: ["blocked_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          }
+        ]
       }
       likes: {
         Row: {

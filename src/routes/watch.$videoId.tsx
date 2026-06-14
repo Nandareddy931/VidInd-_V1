@@ -188,7 +188,7 @@ function WatchContent({ video, upNext }: { video: WatchVideo; upNext: Video[] })
     "https://vjs.zencdn.net/v/oceans.mp4";
 
   return (
-    <div className="mx-auto w-full max-w-2xl lg:max-w-6xl lg:grid lg:grid-cols-[1fr_360px] lg:gap-6">
+    <div className="mx-auto w-full max-w-2xl lg:max-w-6xl lg:grid lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_380px] lg:gap-5 xl:gap-6">
       <div className="min-w-0">
         {/* Player wrapper with overlay top bar */}
         <div className="relative">
@@ -228,24 +228,24 @@ function WatchContent({ video, upNext }: { video: WatchVideo; upNext: Video[] })
 
         {/* Title + meta */}
         <div className="mt-4">
-          <h1 className="text-lg md:text-2xl font-extrabold leading-tight">
+          <h1 className="text-base sm:text-lg md:text-2xl font-extrabold leading-tight">
             {video.title}
           </h1>
-          <p className="mt-1 text-xs md:text-sm text-muted-foreground">
+          <p className="mt-1 text-[11px] sm:text-xs md:text-sm text-muted-foreground">
             {formatCount(viewsCount)} views • {video.time}{" "}
             <span className="text-accent">#vidind #neon #cyberpunk</span>
           </p>
         </div>
 
         {/* Channel row */}
-        <div className="mt-4 flex items-center justify-between gap-3">
+        <div className="mt-3 sm:mt-4 flex items-center justify-between gap-2 sm:gap-3">
           {video.creatorId ? (
             <Link
               to="/channel/$userId"
               params={{ userId: video.creatorId }}
               className="flex items-center gap-3 min-w-0 group"
             >
-              <Avatar className="h-11 w-11 ring-2 ring-primary/40 transition-smooth group-hover:ring-accent">
+              <Avatar className="h-9 w-9 sm:h-11 sm:w-11 ring-2 ring-primary/40 transition-smooth group-hover:ring-accent">
                 <AvatarFallback className="bg-gradient-primary text-white font-bold">
                   {video.channelInitial}
                 </AvatarFallback>
@@ -261,7 +261,7 @@ function WatchContent({ video, upNext }: { video: WatchVideo; upNext: Video[] })
             </Link>
           ) : (
             <div className="flex items-center gap-3 min-w-0">
-              <Avatar className="h-11 w-11 ring-2 ring-primary/40">
+              <Avatar className="h-9 w-9 sm:h-11 sm:w-11 ring-2 ring-primary/40">
                 <AvatarFallback className="bg-gradient-primary text-white font-bold">
                   {video.channelInitial}
                 </AvatarFallback>
@@ -295,7 +295,7 @@ function WatchContent({ video, upNext }: { video: WatchVideo; upNext: Video[] })
         </div>
 
         {/* Action row */}
-        <div className="mt-4 flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+        <div className="mt-3 sm:mt-4 flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
           <ActionPill
             active={liked}
             onClick={() => {
@@ -388,7 +388,7 @@ function ActionPill({
   return (
     <button
       onClick={onClick}
-      className={`shrink-0 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-smooth ${
+      className={`shrink-0 inline-flex items-center gap-1.5 sm:gap-2 rounded-full px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-smooth touch-manipulation ${
         active
           ? "bg-gradient-primary text-white glow-primary border-0"
           : "glass hover:text-accent"
@@ -407,7 +407,7 @@ function UpNextItem({ video }: { video: Video }) {
       params={{ videoId: video.id }}
       className="flex gap-3 group"
     >
-      <div className="relative w-40 shrink-0 aspect-video rounded-xl overflow-hidden glass">
+      <div className="relative w-36 sm:w-40 shrink-0 aspect-video rounded-xl overflow-hidden glass">
         {video.thumbnail ? (
           <img
             src={video.thumbnail}
@@ -446,7 +446,7 @@ function UpNextItem({ video }: { video: Video }) {
 
 function WatchSkeleton() {
   return (
-    <div className="mx-auto w-full max-w-2xl lg:max-w-6xl lg:grid lg:grid-cols-[1fr_360px] lg:gap-6">
+    <div className="mx-auto w-full max-w-2xl lg:max-w-6xl lg:grid lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_380px] lg:gap-5 xl:gap-6">
       <div>
         <Skeleton className="aspect-video w-full rounded-2xl" />
         <Skeleton className="mt-4 h-6 w-3/4" />

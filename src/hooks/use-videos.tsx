@@ -47,7 +47,7 @@ export function dbVideoToCard(v: DbVideo, channelName?: string): Video & { video
     views: formatViews(v.views ?? 0),
     time: timeAgo(v.created_at),
     duration: "",
-    badge: "New",
+    // badge: "New",
     category: v.category || "All",
     videoUrl: v.video_url,
   };

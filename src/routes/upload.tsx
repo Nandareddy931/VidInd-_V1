@@ -146,9 +146,9 @@ function UploadPage() {
     <AppLayout>
       <div className="mx-auto max-w-2xl">
         <h1 className="text-3xl font-extrabold tracking-tight">
-          Create on <span className="gradient-text">Vidind</span>
+          Join with <span className="gradient-text">Vidind</span>
         </h1>
-        <p className="mt-1 text-muted-foreground">Drop your video — we'll handle the rest.</p>
+        <p className="mt-1 text-muted-foreground">Upload your video — we'll handle the rest.</p>
 
         {!userId && (
           <div className="mt-4 rounded-2xl glass p-4 border border-accent/40 text-sm">

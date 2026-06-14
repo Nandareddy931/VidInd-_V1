@@ -71,15 +71,15 @@ function ChannelPage() {
   return (
     <AppLayout>
       {/* Banner */}
-      <div className="relative h-32 md:h-56 rounded-3xl bg-gradient-hero overflow-hidden glow-primary">
+      <div className="relative h-28 sm:h-32 md:h-48 lg:h-56 rounded-2xl md:rounded-3xl bg-gradient-hero overflow-hidden glow-primary">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_40%,oklch(0.78_0.17_300/0.45),transparent_60%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_70%,oklch(0.78_0.17_215/0.35),transparent_60%)]" />
       </div>
 
       {/* Header */}
-      <div className="px-2 md:px-4 mt-4 md:mt-6">
-        <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
-          <Avatar className="h-24 w-24 md:h-32 md:w-32 ring-4 ring-background shadow-elevated -mt-16 md:-mt-20">
+      <div className="px-2 md:px-4 mt-3 sm:mt-4 md:mt-6">
+        <div className="flex flex-col md:flex-row md:items-center gap-3 sm:gap-4 md:gap-6">
+          <Avatar className="h-20 w-20 sm:h-24 sm:w-24 md:h-32 md:w-32 ring-4 ring-background shadow-elevated -mt-12 sm:-mt-16 md:-mt-20">
             {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt={displayName} />}
             <AvatarFallback className="bg-gradient-primary text-white text-3xl font-bold">
               {initial}
@@ -94,7 +94,7 @@ function ChannelPage() {
               </div>
             ) : (
               <>
-                <h1 className="text-2xl md:text-3xl font-extrabold truncate">{displayName}</h1>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold truncate">{displayName}</h1>
                 <p className="text-muted-foreground text-sm mt-1">
                   @{handle} • {formatCount(subscribers)}{" "}
                   {subscribers === 1 ? "subscriber" : "subscribers"} • {videos.length}{" "}
@@ -137,7 +137,7 @@ function ChannelPage() {
       <section className="mt-6 px-2 md:px-4 pb-28 md:pb-8">
         {tab === "videos" ? (
           videosLoading ? (
-            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
               {Array.from({ length: 4 }).map((_, i) => (
                 <VideoCardSkeleton key={i} />
               ))}
@@ -153,7 +153,7 @@ function ChannelPage() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
               {videos.map((v, i) => (
                 <VideoCard key={v.id} video={dbVideoToCard(v, displayName)} index={i} />
               ))}

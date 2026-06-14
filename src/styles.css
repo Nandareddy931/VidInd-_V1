@@ -1,5 +1,4 @@
-@import "tailwindcss" source(none);
-@source "../src";
+@import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
@@ -155,6 +154,25 @@ html {
   .animate-scale-in { animation: scale-in 0.3s ease-out both; }
   .animate-pulse-glow { animation: pulse-glow 2.5s ease-in-out infinite; }
   .animate-float { animation: float 6s ease-in-out infinite; }
+
+  /* Responsive / mobile utilities */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Safe area for iPhone bottom bar */
+  .pb-safe-area-inset-bottom {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+
+  /* Better tap highlighting on touch screens */
+  button, a {
+    -webkit-tap-highlight-color: transparent;
+  }
 }
 
 @keyframes fade-in {

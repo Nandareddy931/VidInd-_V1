@@ -28,12 +28,12 @@ function TrendingPage() {
           <Flame className="h-6 w-6 text-white" />
         </span>
         <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold">Trending now</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold">Trending now</h1>
           <p className="text-sm text-muted-foreground">What everyone's watching today</p>
         </div>
       </div>
       {loading ? (
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-5">
           {Array.from({ length: 8 }).map((_, i) => <VideoCardSkeleton key={i} />)}
         </div>
       ) : items.length === 0 ? (
@@ -48,7 +48,7 @@ function TrendingPage() {
           </Link>
         </div>
       ) : (
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-5">
           {items.map((v, i) => <VideoCard key={v.id} video={v} index={i} />)}
         </div>
       )}

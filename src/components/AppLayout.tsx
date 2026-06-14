@@ -9,7 +9,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <Sidebar />
       <div className="flex-1 min-w-0 flex flex-col">
         <TopBar />
-        <main className="flex-1 px-4 md:px-6 lg:px-8 py-5 pb-28 md:pb-8">{children}</main>
+        {/* pb-28 on mobile for BottomNav, pb-6 on tablet+; px scales with screen */}
+        <main className="flex-1 px-3 sm:px-4 md:px-5 lg:px-8 py-4 lg:py-5 pb-28 md:pb-8">
+          {children}
+        </main>
       </div>
       <BottomNav />
     </div>

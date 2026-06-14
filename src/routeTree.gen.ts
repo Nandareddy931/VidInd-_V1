@@ -34,6 +34,7 @@ import { Route as WatchVideoIdRouteImport } from './routes/watch.$videoId'
 import { Route as StudioSettingsRouteImport } from './routes/studio.settings'
 import { Route as StudioMonetizationRouteImport } from './routes/studio.monetization'
 import { Route as StudioContentRouteImport } from './routes/studio.content'
+import { Route as StudioCommentsRouteImport } from './routes/studio.comments'
 import { Route as StudioAnalyticsRouteImport } from './routes/studio.analytics'
 import { Route as ChannelUserIdRouteImport } from './routes/channel.$userId'
 
@@ -162,6 +163,11 @@ const StudioContentRoute = StudioContentRouteImport.update({
   path: '/content',
   getParentRoute: () => StudioRoute,
 } as any)
+const StudioCommentsRoute = StudioCommentsRouteImport.update({
+  id: '/comments',
+  path: '/comments',
+  getParentRoute: () => StudioRoute,
+} as any)
 const StudioAnalyticsRoute = StudioAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
@@ -196,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/welcome': typeof WelcomeRoute
   '/channel/$userId': typeof ChannelUserIdRoute
   '/studio/analytics': typeof StudioAnalyticsRoute
+  '/studio/comments': typeof StudioCommentsRoute
   '/studio/content': typeof StudioContentRoute
   '/studio/monetization': typeof StudioMonetizationRoute
   '/studio/settings': typeof StudioSettingsRoute
@@ -224,6 +231,7 @@ export interface FileRoutesByTo {
   '/welcome': typeof WelcomeRoute
   '/channel/$userId': typeof ChannelUserIdRoute
   '/studio/analytics': typeof StudioAnalyticsRoute
+  '/studio/comments': typeof StudioCommentsRoute
   '/studio/content': typeof StudioContentRoute
   '/studio/monetization': typeof StudioMonetizationRoute
   '/studio/settings': typeof StudioSettingsRoute
@@ -254,6 +262,7 @@ export interface FileRoutesById {
   '/welcome': typeof WelcomeRoute
   '/channel/$userId': typeof ChannelUserIdRoute
   '/studio/analytics': typeof StudioAnalyticsRoute
+  '/studio/comments': typeof StudioCommentsRoute
   '/studio/content': typeof StudioContentRoute
   '/studio/monetization': typeof StudioMonetizationRoute
   '/studio/settings': typeof StudioSettingsRoute
@@ -285,6 +294,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/channel/$userId'
     | '/studio/analytics'
+    | '/studio/comments'
     | '/studio/content'
     | '/studio/monetization'
     | '/studio/settings'
@@ -313,6 +323,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/channel/$userId'
     | '/studio/analytics'
+    | '/studio/comments'
     | '/studio/content'
     | '/studio/monetization'
     | '/studio/settings'
@@ -342,6 +353,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/channel/$userId'
     | '/studio/analytics'
+    | '/studio/comments'
     | '/studio/content'
     | '/studio/monetization'
     | '/studio/settings'
@@ -551,6 +563,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudioContentRouteImport
       parentRoute: typeof StudioRoute
     }
+    '/studio/comments': {
+      id: '/studio/comments'
+      path: '/comments'
+      fullPath: '/studio/comments'
+      preLoaderRoute: typeof StudioCommentsRouteImport
+      parentRoute: typeof StudioRoute
+    }
     '/studio/analytics': {
       id: '/studio/analytics'
       path: '/analytics'
@@ -570,6 +589,7 @@ declare module '@tanstack/react-router' {
 
 interface StudioRouteChildren {
   StudioAnalyticsRoute: typeof StudioAnalyticsRoute
+  StudioCommentsRoute: typeof StudioCommentsRoute
   StudioContentRoute: typeof StudioContentRoute
   StudioMonetizationRoute: typeof StudioMonetizationRoute
   StudioSettingsRoute: typeof StudioSettingsRoute
@@ -578,6 +598,7 @@ interface StudioRouteChildren {
 
 const StudioRouteChildren: StudioRouteChildren = {
   StudioAnalyticsRoute: StudioAnalyticsRoute,
+  StudioCommentsRoute: StudioCommentsRoute,
   StudioContentRoute: StudioContentRoute,
   StudioMonetizationRoute: StudioMonetizationRoute,
   StudioSettingsRoute: StudioSettingsRoute,
