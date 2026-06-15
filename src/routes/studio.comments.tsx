@@ -69,9 +69,9 @@ function CommentsPage() {
   const loadComments = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    
+ 
     // Fetch comments on creator's videos (videos!inner matches video's user_id = creator)
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("comments")
       .select(`
         id,
@@ -91,7 +91,7 @@ function CommentsPage() {
           thumbnail_url,
           user_id
         ),
-        profiles:user_id (
+        profiles (
           display_name,
           avatar_url
         )
@@ -99,7 +99,66 @@ function CommentsPage() {
       .eq("videos.user_id", user.id)
       .order("created_at", { ascending: false });
 
-    if (error) {
+    // Fallback if profiles relationship fails (PGRST200)
+    if (error && error.code === "PGRST200") {
+      console.warn("Studio comments profiles relationship missing, falling back to separate queries.");
+      const { data: fallbackData, error: fallbackError } = await (supabase
+        .from("comments") as any)
+        .select(`
+          id,
+          video_id,
+          user_id,
+          parent_comment_id,
+          comment_text,
+          content,
+          likes_count,
+          is_pinned,
+          is_hidden,
+          is_reported,
+          is_reviewed,
+          created_at,
+          videos!inner (
+            id,
+            title,
+            thumbnail_url,
+            user_id
+          )
+        `)
+        .eq("videos.user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (fallbackError) {
+        console.error("[Supabase Error] Studio comments fallback fetch failed:", fallbackError);
+        toast.error("Error loading comments");
+        setLoading(false);
+        return;
+      }
+
+      data = fallbackData;
+
+      // Batch query profiles separately
+      if (data && data.length > 0) {
+        const userIds = Array.from(new Set(data.map((c: any) => c.user_id)));
+        const { data: profilesData, error: profilesError } = await supabase
+          .from("profiles")
+          .select("user_id, display_name, avatar_url")
+          .in("user_id", userIds);
+          
+        if (profilesError) {
+          console.error("[Supabase Error] Studio separated profiles fetch failed:", profilesError);
+        } else if (profilesData) {
+          const profileMap = new Map(profilesData.map((p) => [p.user_id, p]));
+          data = data.map((c: any) => ({
+            ...c,
+            profiles: profileMap.get(c.user_id) || null
+          }));
+        }
+      }
+    } else if (error) {
+      console.error("[Supabase Error] Failed to load studio comments for creator user_id:", user.id, {
+        code: error.code,
+        message: error.message
+      });
       toast.error("Error loading comments");
       setLoading(false);
       return;
@@ -110,7 +169,7 @@ function CommentsPage() {
       video_id: c.video_id,
       user_id: c.user_id,
       parent_comment_id: c.parent_comment_id,
-      comment_text: c.comment_text,
+      comment_text: c.comment_text || c.content || "",
       likes_count: Number(c.likes_count ?? 0),
       is_pinned: !!c.is_pinned,
       is_hidden: !!c.is_hidden,
@@ -141,6 +200,10 @@ function CommentsPage() {
       .update({ is_reviewed: true })
       .eq("id", id);
     if (error) {
+      console.error("[Supabase Error] Failed to review comment in studio:", id, {
+        code: error.code,
+        message: error.message
+      });
       toast.error("Couldn't update comment status");
     } else {
       toast.success("Comment marked as reviewed");
@@ -155,6 +218,10 @@ function CommentsPage() {
       .update({ is_hidden: nextState })
       .eq("id", c.id);
     if (error) {
+      console.error("[Supabase Error] Failed to toggle comment visibility in studio:", c.id, {
+        code: error.code,
+        message: error.message
+      });
       toast.error("Couldn't update comment visibility");
     } else {
       toast.success(nextState ? "Comment hidden from viewers" : "Comment is now visible");
@@ -166,12 +233,35 @@ function CommentsPage() {
     const nextState = !c.is_pinned;
     if (nextState) {
       // Unpin all on this video first, then pin
-      await supabase.from("comments").update({ is_pinned: false }).eq("video_id", c.video_id);
-      await supabase.from("comments").update({ is_pinned: true }).eq("id", c.id);
-      toast.success("Comment pinned to top of video");
+      const { error: unpinError } = await supabase.from("comments").update({ is_pinned: false }).eq("video_id", c.video_id);
+      if (unpinError) {
+        console.error("[Supabase Error] Failed to unpin other comments on video_id:", c.video_id, {
+          code: unpinError.code,
+          message: unpinError.message
+        });
+      }
+      
+      const { error: pinError } = await supabase.from("comments").update({ is_pinned: true }).eq("id", c.id);
+      if (pinError) {
+        console.error("[Supabase Error] Failed to pin comment in studio:", c.id, {
+          code: pinError.code,
+          message: pinError.message
+        });
+        toast.error("Couldn't pin comment");
+      } else {
+        toast.success("Comment pinned to top of video");
+      }
     } else {
-      await supabase.from("comments").update({ is_pinned: false }).eq("id", c.id);
-      toast.success("Comment unpinned");
+      const { error: unpinError } = await supabase.from("comments").update({ is_pinned: false }).eq("id", c.id);
+      if (unpinError) {
+        console.error("[Supabase Error] Failed to unpin comment in studio:", c.id, {
+          code: unpinError.code,
+          message: unpinError.message
+        });
+        toast.error("Couldn't unpin comment");
+      } else {
+        toast.success("Comment unpinned");
+      }
     }
     loadComments();
   };
@@ -180,6 +270,10 @@ function CommentsPage() {
     if (!window.confirm("Are you sure you want to permanently delete this comment?")) return;
     const { error } = await supabase.from("comments").delete().eq("id", id);
     if (error) {
+      console.error("[Supabase Error] Failed to delete comment in studio:", id, {
+        code: error.code,
+        message: error.message
+      });
       toast.error("Couldn't delete comment");
     } else {
       toast.success("Comment deleted");
@@ -196,6 +290,10 @@ function CommentsPage() {
       blocked_id: commenterId,
     });
     if (error) {
+      console.error("[Supabase Error] Failed to block user in studio:", commenterId, {
+        code: error.code,
+        message: error.message
+      });
       toast.error("Couldn't block user");
     } else {
       toast.success(`${commenterName} blocked successfully`);
@@ -207,19 +305,40 @@ function CommentsPage() {
     if (!user || !replyText.trim()) return;
     setSubmittingReply(true);
 
-    const { error } = await supabase.from("comments").insert({
-      video_id: comment.video_id,
-      user_id: user.id,
-      parent_comment_id: comment.id,
-      comment_text: replyText.trim(),
-      is_reviewed: true // Creator replies are auto-reviewed
-    });
+    let insertResult = await supabase
+      .from("comments")
+      .insert({
+        video_id: comment.video_id,
+        user_id: user.id,
+        parent_comment_id: comment.id,
+        comment_text: replyText.trim(),
+        is_reviewed: true // Creator replies are auto-reviewed
+      });
 
-    if (error) {
+    // Fallback if comment_text is missing
+    if (insertResult.error && (insertResult.error.message.includes("column") || insertResult.error.code === "PGRST100" || insertResult.error.message.includes("comment_text"))) {
+      console.warn("comment_text missing in studio, falling back to legacy content insert");
+      insertResult = await (supabase.from("comments") as any).insert({
+        video_id: comment.video_id,
+        user_id: user.id,
+        parent_comment_id: comment.id,
+        content: replyText.trim(),
+        is_reviewed: true
+      });
+    }
+
+    if (insertResult.error) {
+      console.error("[Supabase Error] Failed to post reply in studio:", insertResult.error);
       toast.error("Couldn't post reply");
     } else {
       // Mark parent as reviewed when replied to
-      await supabase.from("comments").update({ is_reviewed: true }).eq("id", comment.id);
+      const { error: reviewError } = await supabase.from("comments").update({ is_reviewed: true }).eq("id", comment.id);
+      if (reviewError) {
+        console.error("[Supabase Error] Failed to mark parent comment as reviewed in studio:", comment.id, {
+          code: reviewError.code,
+          message: reviewError.message
+        });
+      }
       toast.success("Reply posted!");
       setReplyText("");
       setReplyingToId(null);
@@ -231,7 +350,7 @@ function CommentsPage() {
   // Analytics calculations
   const analytics = useMemo(() => {
     if (!user) return { total: 0, newToday: 0, topVideoTitle: "None", replyRate: 0 };
-    
+
     // Filter to comments made by others on creator's videos
     const receivedComments = comments.filter(c => c.user_id !== user.id);
     const total = receivedComments.length;
@@ -386,9 +505,8 @@ function CommentsPage() {
             <button
               key={f.value}
               onClick={() => setActiveFilter(f.value as FilterType)}
-              className={`px-3.5 py-2 rounded-lg font-medium whitespace-nowrap transition-smooth ${
-                activeFilter === f.value ? "bg-gradient-primary text-white glow-primary" : "text-muted-foreground hover:text-foreground"
-              }`}
+              className={`px-3.5 py-2 rounded-lg font-medium whitespace-nowrap transition-smooth ${activeFilter === f.value ? "bg-gradient-primary text-white glow-primary" : "text-muted-foreground hover:text-foreground"
+                }`}
             >
               {f.label}
             </button>
@@ -428,12 +546,12 @@ function CommentsPage() {
                         {c.display_name[0].toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    
+
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-bold text-sm text-foreground truncate">{c.display_name}</span>
                         <span className="text-[10px] text-muted-foreground">{timeAgo(c.created_at)}</span>
-                        
+
                         {/* Status Badges */}
                         {c.is_pinned && (
                           <span className="px-1.5 py-0.5 rounded bg-accent/10 border border-accent/20 text-[9px] text-accent font-bold uppercase tracking-wider flex items-center gap-0.5">
@@ -546,7 +664,7 @@ function CommentsPage() {
                         <CornerDownRight className="h-3.5 w-3.5" />
                         <span>{hasCreatorReplied ? "Reply Again" : "Reply"}</span>
                       </button>
-                      
+
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                         <Heart className="h-3.5 w-3.5" />
                         <span className="tabular-nums">{c.likes_count} likes</span>
@@ -591,11 +709,10 @@ function CommentsPage() {
                     {!c.parent_comment_id && (
                       <button
                         onClick={() => handleTogglePin(c)}
-                        className={`h-8 w-8 rounded-lg border flex items-center justify-center transition-smooth ${
-                          c.is_pinned
+                        className={`h-8 w-8 rounded-lg border flex items-center justify-center transition-smooth ${c.is_pinned
                             ? "bg-accent text-accent-foreground border-accent font-semibold"
                             : "bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground border-white/5 hover:border-white/10"
-                        }`}
+                          }`}
                         title={c.is_pinned ? "Unpin comment" : "Pin comment to top"}
                       >
                         <Pin className={`h-4 w-4 ${c.is_pinned ? "fill-accent-foreground" : ""}`} />
@@ -605,11 +722,10 @@ function CommentsPage() {
                     {/* Hide/Unhide */}
                     <button
                       onClick={() => handleToggleHide(c)}
-                      className={`h-8 w-8 rounded-lg border flex items-center justify-center transition-smooth ${
-                        c.is_hidden
+                      className={`h-8 w-8 rounded-lg border flex items-center justify-center transition-smooth ${c.is_hidden
                           ? "bg-warning/15 border-warning/30 text-warning"
                           : "bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground border-white/5 hover:border-white/10"
-                      }`}
+                        }`}
                       title={c.is_hidden ? "Show comment" : "Hide comment from viewers"}
                     >
                       {c.is_hidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}

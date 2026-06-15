@@ -56,7 +56,7 @@ function UploadPage() {
       return;
     }
     if (f.size > MAX_BYTES) {
-      toast.error("File too large. Max 4GB.");
+      toast.error("File too large. Max 50MB allowed due to beta testing.");
       return;
     }
     setFile(f);

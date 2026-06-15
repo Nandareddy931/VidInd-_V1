@@ -1,16 +1,16 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "@tanstack/react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-  Send, 
-  Trash2, 
-  Loader2, 
-  Heart, 
-  Reply, 
-  MoreVertical, 
-  Pin, 
-  Flag, 
-  UserX, 
+import {
+  Send,
+  Trash2,
+  Loader2,
+  Heart,
+  Reply,
+  MoreVertical,
+  Pin,
+  Flag,
+  UserX,
   CheckCircle,
   MessageSquare
 } from "lucide-react";
@@ -46,7 +46,7 @@ export function Comments({ videoId }: { videoId: string }) {
   const [text, setText] = useState("");
   const [posting, setPosting] = useState(false);
   const [videoOwnerId, setVideoOwnerId] = useState<string | null>(null);
-  
+
   // Reply and menu states
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
@@ -55,65 +55,125 @@ export function Comments({ videoId }: { videoId: string }) {
   const [likedCommentIds, setLikedCommentIds] = useState<Set<string>>(new Set());
 
   const loadVideoDetails = useCallback(async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("videos")
       .select("user_id")
       .eq("id", videoId)
       .single();
+    if (error) {
+      console.error("[Supabase Error] Failed to fetch video owner details for video_id:", videoId, {
+        code: error.code,
+        message: error.message
+      });
+    }
     if (data) {
       setVideoOwnerId(data.user_id);
     }
   }, [videoId]);
 
+  const fetchSingleProfile = useCallback(async (userId: string, commentId: string) => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("display_name, avatar_url")
+      .eq("user_id", userId)
+      .single();
+    if (error) {
+      console.error("[Supabase Error] Failed to fetch single profile for user_id:", userId, {
+        code: error.code,
+        message: error.message
+      });
+    }
+    if (data) {
+      setComments((prev) =>
+        prev.map((c) =>
+          c.id === commentId
+            ? { ...c, display_name: data.display_name, avatar_url: data.avatar_url }
+            : c
+        )
+      );
+    }
+  }, []);
+
   const load = useCallback(async () => {
     setLoading(true);
-    // Fetch comments
-    const { data: rows } = await supabase
-      .from("comments")
-      .select(`
-        id,
-        video_id,
-        user_id,
-        parent_comment_id,
-        comment_text,
-        likes_count,
-        is_pinned,
-        is_hidden,
-        is_reported,
-        is_reviewed,
-        created_at,
-        profiles:user_id (
-          display_name,
-          avatar_url
-        )
-      `)
+    console.log("Video ID:", videoId);
+    
+    // Fetch comments using select("*") as requested to temporarily bypass join relationship issues
+    const { data, error } = await (supabase
+      .from("comments") as any)
+      .select("*")
       .eq("video_id", videoId)
       .order("created_at", { ascending: false });
 
-    const list = (rows ?? []).map((r: any) => ({
+    console.log("Comments Data:", data);
+    console.log("Comments Error:", error);
+
+    if (error) {
+      console.error("[Supabase Error] Failed to fetch comments for video_id:", videoId, {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
+      toast.error("Failed to load comments");
+      setLoading(false);
+      return;
+    }
+
+    let list = (data ?? []).map((r: any) => ({
       id: r.id,
       video_id: r.video_id,
       user_id: r.user_id,
       parent_comment_id: r.parent_comment_id,
-      comment_text: r.comment_text,
+      comment_text: r.comment_text || r.content || "",
       likes_count: Number(r.likes_count ?? 0),
       is_pinned: !!r.is_pinned,
       is_hidden: !!r.is_hidden,
       is_reported: !!r.is_reported,
       is_reviewed: !!r.is_reviewed,
       created_at: r.created_at,
-      display_name: r.profiles?.display_name ?? null,
-      avatar_url: r.profiles?.avatar_url ?? null,
+      display_name: null,
+      avatar_url: null,
     })) as CommentWithProfile[];
+
+    // Fetch profile data separately so that relationship errors don't block comments loading
+    if (list.length > 0) {
+      const userIds = Array.from(new Set(list.map((c) => c.user_id)));
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select("user_id, display_name, avatar_url")
+        .in("user_id", userIds);
+        
+      if (profilesError) {
+        console.error("[Supabase Error] Failed to batch fetch profiles:", profilesError);
+      } else if (profilesData) {
+        const profileMap = new Map(profilesData.map((p) => [p.user_id, p]));
+        list = list.map((c) => {
+          const profile = profileMap.get(c.user_id);
+          return {
+            ...c,
+            display_name: profile?.display_name ?? "User",
+            avatar_url: profile?.avatar_url ?? null
+          };
+        });
+      }
+    }
 
     setComments(list);
 
     // Fetch current user likes
     if (user) {
-      const { data: likes } = await supabase
+      const { data: likes, error: likesError } = await supabase
         .from("comment_likes")
         .select("comment_id")
         .eq("user_id", user.id);
+      
+      if (likesError) {
+        console.error("[Supabase Error] Failed to fetch comment likes for user_id:", user.id, {
+          code: likesError.code,
+          message: likesError.message
+        });
+      }
       if (likes) {
         setLikedCommentIds(new Set(likes.map((l) => l.comment_id)));
       }
@@ -126,20 +186,51 @@ export function Comments({ videoId }: { videoId: string }) {
     load();
   }, [load, loadVideoDetails]);
 
-  // Realtime updates
+  // Realtime updates using the comments-${videoId} channel
   useEffect(() => {
     const channel = supabase
-      .channel(`comments:${videoId}`)
+      .channel(`comments-${videoId}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "comments", filter: `video_id=eq.${videoId}` },
-        () => load(),
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "comments",
+          filter: `video_id=eq.${videoId}`
+        },
+        (payload) => {
+          console.log("Realtime INSERT payload:", payload);
+          setComments((prev) => {
+            if (prev.some((c) => c.id === payload.new.id)) return prev;
+            
+            const newComment: CommentWithProfile = {
+              id: payload.new.id,
+              video_id: payload.new.video_id,
+              user_id: payload.new.user_id,
+              parent_comment_id: payload.new.parent_comment_id,
+              comment_text: payload.new.comment_text || payload.new.content || "",
+              likes_count: Number(payload.new.likes_count ?? 0),
+              is_pinned: !!payload.new.is_pinned,
+              is_hidden: !!payload.new.is_hidden,
+              is_reported: !!payload.new.is_reported,
+              is_reviewed: !!payload.new.is_reviewed,
+              created_at: payload.new.created_at,
+              display_name: "User",
+              avatar_url: null,
+            };
+            
+            // Resolve profile details in background
+            fetchSingleProfile(payload.new.user_id, payload.new.id);
+            return [newComment, ...prev];
+          });
+        }
       )
       .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [videoId, load]);
+  }, [videoId, fetchSingleProfile]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,23 +242,42 @@ export function Comments({ videoId }: { videoId: string }) {
     }
     setPosting(true);
 
-    // Bad words detection
     const hasBadWords = containsBadWords(cleanText);
 
-    // Insert comment
-    const { error } = await supabase.from("comments").insert({
-      video_id: videoId,
-      user_id: user.id,
-      comment_text: cleanText,
-      is_hidden: hasBadWords,
-      is_reported: hasBadWords,
-    });
+    // Try inserting with comment_text
+    let insertResult = await (supabase
+      .from("comments") as any)
+      .insert({
+        video_id: videoId,
+        user_id: user.id,
+        comment_text: cleanText,
+        is_hidden: hasBadWords,
+        is_reported: hasBadWords,
+      })
+      .select("*")
+      .single();
+
+    // Fallback to content column if comment_text does not exist
+    if (insertResult.error && (insertResult.error.message.includes("column") || insertResult.error.code === "PGRST100" || insertResult.error.message.includes("comment_text"))) {
+      console.warn("comment_text column missing, falling back to legacy content column insert");
+      insertResult = await (supabase
+        .from("comments") as any)
+        .insert({
+          video_id: videoId,
+          user_id: user.id,
+          content: cleanText,
+        })
+        .select("*")
+        .single();
+    }
 
     setPosting(false);
-    if (error) {
+    if (insertResult.error) {
+      console.error("[Supabase Error] Failed to post comment:", insertResult.error);
       toast.error("Couldn't post comment");
     } else {
-      setText("");
+      setText(""); // Clear comment input after successful insert
+      
       if (hasBadWords) {
         toast.warning("Your comment was flagged by the automated filter and is pending moderator review.", {
           duration: 5000,
@@ -175,7 +285,30 @@ export function Comments({ videoId }: { videoId: string }) {
       } else {
         toast.success("Comment posted!");
       }
-      load();
+
+      // Add to React state immediately
+      const newComment: CommentWithProfile = {
+        id: insertResult.data.id,
+        video_id: insertResult.data.video_id,
+        user_id: insertResult.data.user_id,
+        parent_comment_id: insertResult.data.parent_comment_id,
+        comment_text: insertResult.data.comment_text || insertResult.data.content || "",
+        likes_count: Number(insertResult.data.likes_count ?? 0),
+        is_pinned: !!insertResult.data.is_pinned,
+        is_hidden: !!insertResult.data.is_hidden,
+        is_reported: !!insertResult.data.is_reported,
+        is_reviewed: !!insertResult.data.is_reviewed,
+        created_at: insertResult.data.created_at,
+        display_name: user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
+        avatar_url: user.user_metadata?.avatar_url || null,
+      };
+
+      setComments((prev) => {
+        if (prev.some((c) => c.id === newComment.id)) return prev;
+        return [newComment, ...prev];
+      });
+
+      load(); // Automatic refresh
     }
   };
 
@@ -188,36 +321,83 @@ export function Comments({ videoId }: { videoId: string }) {
     }
     setReplying(true);
 
-    // Bad words detection
     const hasBadWords = containsBadWords(cleanText);
 
-    const { error } = await supabase.from("comments").insert({
-      video_id: videoId,
-      user_id: user.id,
-      parent_comment_id: parentId,
-      comment_text: cleanText,
-      is_hidden: hasBadWords,
-      is_reported: hasBadWords,
-    });
+    // Try inserting with comment_text
+    let insertResult = await (supabase
+      .from("comments") as any)
+      .insert({
+        video_id: videoId,
+        user_id: user.id,
+        parent_comment_id: parentId,
+        comment_text: cleanText,
+        is_hidden: hasBadWords,
+        is_reported: hasBadWords,
+      })
+      .select("*")
+      .single();
+
+    // Fallback if comment_text or parent_comment_id does not exist
+    if (insertResult.error && (insertResult.error.message.includes("column") || insertResult.error.code === "PGRST100" || insertResult.error.message.includes("comment_text") || insertResult.error.message.includes("parent_comment_id"))) {
+      console.warn("comment_text or parent_comment_id column missing, falling back to legacy content column insert");
+      insertResult = await (supabase
+        .from("comments") as any)
+        .insert({
+          video_id: videoId,
+          user_id: user.id,
+          content: cleanText,
+        })
+        .select("*")
+        .single();
+    }
 
     setReplying(false);
-    if (error) {
+    if (insertResult.error) {
+      console.error("[Supabase Error] Failed to post reply:", insertResult.error);
       toast.error("Couldn't post reply");
     } else {
       setReplyText("");
       setReplyingToId(null);
+      
       if (hasBadWords) {
         toast.warning("Your reply was flagged and is pending creator review.");
       } else {
         toast.success("Reply posted!");
       }
-      load();
+
+      // Add to React state immediately
+      const newReply: CommentWithProfile = {
+        id: insertResult.data.id,
+        video_id: insertResult.data.video_id,
+        user_id: insertResult.data.user_id,
+        parent_comment_id: insertResult.data.parent_comment_id,
+        comment_text: insertResult.data.comment_text || insertResult.data.content || "",
+        likes_count: Number(insertResult.data.likes_count ?? 0),
+        is_pinned: !!insertResult.data.is_pinned,
+        is_hidden: !!insertResult.data.is_hidden,
+        is_reported: !!insertResult.data.is_reported,
+        is_reviewed: !!insertResult.data.is_reviewed,
+        created_at: insertResult.data.created_at,
+        display_name: user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
+        avatar_url: user.user_metadata?.avatar_url || null,
+      };
+
+      setComments((prev) => {
+        if (prev.some((c) => c.id === newReply.id)) return prev;
+        return [...prev, newReply];
+      });
+
+      load(); // Automatic refresh
     }
   };
 
   const remove = async (id: string) => {
     const { error } = await supabase.from("comments").delete().eq("id", id);
     if (error) {
+      console.error("[Supabase Error] Failed to delete comment:", id, {
+        code: error.code,
+        message: error.message
+      });
       toast.error("Couldn't delete comment");
     } else {
       toast.success("Comment deleted");
@@ -233,21 +413,55 @@ export function Comments({ videoId }: { videoId: string }) {
     }
     const liked = likedCommentIds.has(commentId);
     const updatedLikes = new Set(likedCommentIds);
+    const previousLikes = new Set(likedCommentIds);
+    const previousComments = [...comments];
 
     if (liked) {
+      // Optimistic unlike
       updatedLikes.delete(commentId);
       setLikedCommentIds(updatedLikes);
       setComments((prev) =>
         prev.map((c) => (c.id === commentId ? { ...c, likes_count: Math.max(0, c.likes_count - 1) } : c))
       );
-      await supabase.from("comment_likes").delete().eq("comment_id", commentId).eq("user_id", user.id);
+      
+      const { error } = await supabase
+        .from("comment_likes")
+        .delete()
+        .eq("comment_id", commentId)
+        .eq("user_id", user.id);
+        
+      if (error) {
+        console.error("[Supabase Error] Failed to delete comment like:", commentId, {
+          code: error.code,
+          message: error.message
+        });
+        // Rollback
+        setLikedCommentIds(previousLikes);
+        setComments(previousComments);
+        toast.error("Failed to unlike comment");
+      }
     } else {
+      // Optimistic like
       updatedLikes.add(commentId);
       setLikedCommentIds(updatedLikes);
       setComments((prev) =>
         prev.map((c) => (c.id === commentId ? { ...c, likes_count: c.likes_count + 1 } : c))
       );
-      await supabase.from("comment_likes").insert({ comment_id: commentId, user_id: user.id });
+      
+      const { error } = await supabase
+        .from("comment_likes")
+        .insert({ comment_id: commentId, user_id: user.id });
+        
+      if (error) {
+        console.error("[Supabase Error] Failed to insert comment like:", commentId, {
+          code: error.code,
+          message: error.message
+        });
+        // Rollback
+        setLikedCommentIds(previousLikes);
+        setComments(previousComments);
+        toast.error("Failed to like comment");
+      }
     }
   };
 
@@ -257,6 +471,10 @@ export function Comments({ videoId }: { videoId: string }) {
       .update({ is_reported: true })
       .eq("id", commentId);
     if (error) {
+      console.error("[Supabase Error] Failed to report comment:", commentId, {
+        code: error.code,
+        message: error.message
+      });
       toast.error("Couldn't report comment");
     } else {
       toast.success("Comment reported for moderation");
@@ -271,6 +489,10 @@ export function Comments({ videoId }: { videoId: string }) {
       blocked_id: commenterId,
     });
     if (error) {
+      console.error("[Supabase Error] Failed to block user:", commenterId, {
+        code: error.code,
+        message: error.message
+      });
       toast.error("Couldn't block user");
     } else {
       toast.success("User blocked. Future comments from this user will be hidden.");
@@ -282,13 +504,35 @@ export function Comments({ videoId }: { videoId: string }) {
   const togglePin = async (comment: CommentWithProfile) => {
     const currentPinned = comment.is_pinned;
     if (currentPinned) {
-      await supabase.from("comments").update({ is_pinned: false }).eq("id", comment.id);
-      toast.success("Comment unpinned");
+      const { error } = await supabase.from("comments").update({ is_pinned: false }).eq("id", comment.id);
+      if (error) {
+        console.error("[Supabase Error] Failed to unpin comment:", comment.id, {
+          code: error.code,
+          message: error.message
+        });
+        toast.error("Couldn't unpin comment");
+      } else {
+        toast.success("Comment unpinned");
+      }
     } else {
       // Unpin all other comments on this video, then pin this one
-      await supabase.from("comments").update({ is_pinned: false }).eq("video_id", videoId);
-      await supabase.from("comments").update({ is_pinned: true }).eq("id", comment.id);
-      toast.success("Comment pinned");
+      const { error: unpinError } = await supabase.from("comments").update({ is_pinned: false }).eq("video_id", videoId);
+      if (unpinError) {
+        console.error("[Supabase Error] Failed to unpin other comments on video:", videoId, {
+          code: unpinError.code,
+          message: unpinError.message
+        });
+      }
+      const { error: pinError } = await supabase.from("comments").update({ is_pinned: true }).eq("id", comment.id);
+      if (pinError) {
+        console.error("[Supabase Error] Failed to pin comment:", comment.id, {
+          code: pinError.code,
+          message: pinError.message
+        });
+        toast.error("Couldn't pin comment");
+      } else {
+        toast.success("Comment pinned");
+      }
     }
     load();
     setActiveMenuId(null);
@@ -297,6 +541,10 @@ export function Comments({ videoId }: { videoId: string }) {
   const markReviewed = async (commentId: string) => {
     const { error } = await supabase.from("comments").update({ is_reviewed: true }).eq("id", commentId);
     if (error) {
+      console.error("[Supabase Error] Failed to mark comment reviewed:", commentId, {
+        code: error.code,
+        message: error.message
+      });
       toast.error("Error updating comment");
     } else {
       toast.success("Comment marked as reviewed");
@@ -371,9 +619,8 @@ export function Comments({ videoId }: { videoId: string }) {
           <div className="mt-2 flex items-center gap-4 text-xs">
             <button
               onClick={() => toggleLike(c.id)}
-              className={`flex items-center gap-1.5 transition-smooth ${
-                hasLiked ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
-              }`}
+              className={`flex items-center gap-1.5 transition-smooth ${hasLiked ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+                }`}
             >
               <Heart className={`h-4 w-4 ${hasLiked ? "fill-primary text-primary" : ""}`} />
               <span className="tabular-nums">{c.likes_count}</span>

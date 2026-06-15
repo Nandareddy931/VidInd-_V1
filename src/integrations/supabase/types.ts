@@ -333,7 +333,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      toggle_subscribe: {
+        Args: {
+          creator_id_input: string
+        }
+        Returns: {
+          subscribed: boolean
+          subscribers_count: number
+        }
+      }
     }
     Enums: {
       [_ in never]: never
