@@ -57,43 +57,49 @@ export function SubscribeButton({
       navigate({ to: "/login" });
       return;
     }
+
     if (isSelf) {
       toast.error("You can't subscribe to yourself");
       return;
     }
+
     if (pending) return;
 
-    const next = !subscribed;
-    setSubscribed(next);
+    const oldSubscribed = subscribed;
     setPending(true);
-    onCountChange?.(next ? 1 : -1);
 
-    if (next) {
-      const { error } = await supabase
-        .from("subscriptions")
-        .insert({ creator_id: creatorId, subscriber_id: user.id });
-      if (error && error.code !== "23505") {
-        setSubscribed(false);
-        onCountChange?.(-1);
-        toast.error("Couldn't subscribe");
-      } else {
-        toast.success("Subscribed", { description: "You'll see new videos in your feed." });
+    try {
+      const { data, error } = await supabase.rpc("toggle_subscribe", {
+        creator_id_input: creatorId,
+      });
+
+      if (error) throw error;
+
+      const result = data as {
+        subscribed: boolean;
+        subscribers_count: number;
+      };
+
+      setSubscribed(result.subscribed);
+
+      if (result.subscribed !== oldSubscribed) {
+        onCountChange?.(result.subscribed ? 1 : -1);
       }
-    } else {
-      const { error } = await supabase
-        .from("subscriptions")
-        .delete()
-        .eq("creator_id", creatorId)
-        .eq("subscriber_id", user.id);
-      if (error) {
-        setSubscribed(true);
-        onCountChange?.(1);
-        toast.error("Couldn't unsubscribe");
+
+      if (result.subscribed) {
+        toast.success("Subscribed", {
+          description: "You'll see new videos in your feed.",
+        });
       } else {
         setNotify(false);
+        toast.success("Unsubscribed");
       }
+    } catch (error: any) {
+      setSubscribed(oldSubscribed);
+      toast.error(error.message || "Subscribe failed");
+    } finally {
+      setPending(false);
     }
-    setPending(false);
   };
 
   return (

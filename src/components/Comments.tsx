@@ -97,7 +97,7 @@ export function Comments({ videoId }: { videoId: string }) {
   const load = useCallback(async () => {
     setLoading(true);
     console.log("Video ID:", videoId);
-    
+
     // Fetch comments using select("*") as requested to temporarily bypass join relationship issues
     const { data, error } = await (supabase
       .from("comments") as any)
@@ -143,7 +143,7 @@ export function Comments({ videoId }: { videoId: string }) {
         .from("profiles")
         .select("user_id, display_name, avatar_url")
         .in("user_id", userIds);
-        
+
       if (profilesError) {
         console.error("[Supabase Error] Failed to batch fetch profiles:", profilesError);
       } else if (profilesData) {
@@ -167,7 +167,7 @@ export function Comments({ videoId }: { videoId: string }) {
         .from("comment_likes")
         .select("comment_id")
         .eq("user_id", user.id);
-      
+
       if (likesError) {
         console.error("[Supabase Error] Failed to fetch comment likes for user_id:", user.id, {
           code: likesError.code,
@@ -202,7 +202,7 @@ export function Comments({ videoId }: { videoId: string }) {
           console.log("Realtime INSERT payload:", payload);
           setComments((prev) => {
             if (prev.some((c) => c.id === payload.new.id)) return prev;
-            
+
             const newComment: CommentWithProfile = {
               id: payload.new.id,
               video_id: payload.new.video_id,
@@ -218,7 +218,7 @@ export function Comments({ videoId }: { videoId: string }) {
               display_name: "User",
               avatar_url: null,
             };
-            
+
             // Resolve profile details in background
             fetchSingleProfile(payload.new.user_id, payload.new.id);
             return [newComment, ...prev];
@@ -277,7 +277,7 @@ export function Comments({ videoId }: { videoId: string }) {
       toast.error("Couldn't post comment");
     } else {
       setText(""); // Clear comment input after successful insert
-      
+
       if (hasBadWords) {
         toast.warning("Your comment was flagged by the automated filter and is pending moderator review.", {
           duration: 5000,
@@ -358,7 +358,7 @@ export function Comments({ videoId }: { videoId: string }) {
     } else {
       setReplyText("");
       setReplyingToId(null);
-      
+
       if (hasBadWords) {
         toast.warning("Your reply was flagged and is pending creator review.");
       } else {
@@ -423,13 +423,13 @@ export function Comments({ videoId }: { videoId: string }) {
       setComments((prev) =>
         prev.map((c) => (c.id === commentId ? { ...c, likes_count: Math.max(0, c.likes_count - 1) } : c))
       );
-      
+
       const { error } = await supabase
         .from("comment_likes")
         .delete()
         .eq("comment_id", commentId)
         .eq("user_id", user.id);
-        
+
       if (error) {
         console.error("[Supabase Error] Failed to delete comment like:", commentId, {
           code: error.code,
@@ -447,11 +447,11 @@ export function Comments({ videoId }: { videoId: string }) {
       setComments((prev) =>
         prev.map((c) => (c.id === commentId ? { ...c, likes_count: c.likes_count + 1 } : c))
       );
-      
+
       const { error } = await supabase
         .from("comment_likes")
         .insert({ comment_id: commentId, user_id: user.id });
-        
+
       if (error) {
         console.error("[Supabase Error] Failed to insert comment like:", commentId, {
           code: error.code,

@@ -18,7 +18,7 @@ export const Route = createFileRoute("/upload")({
   component: UploadPage,
 });
 
-const MAX_BYTES = 4 * 1024 * 1024 * 1024; // 4GB
+const MAX_BYTES = 50 * 1024 * 1024; // 50MB
 
 function UploadPage() {
   const navigate = useNavigate();
@@ -177,7 +177,7 @@ function UploadPage() {
               <UploadIcon className="h-10 w-10 text-white" />
             </div>
             <h2 className="mt-5 text-xl font-bold">Drag & drop your video</h2>
-            <p className="mt-1 text-sm text-muted-foreground">MP4, MOV, WebM up to 4GB</p>
+            <p className="mt-1 text-sm text-muted-foreground">MP4, MOV, WebM up to 50MB only</p>
             <Button type="button" className="mt-5 bg-gradient-primary border-0 rounded-full px-6 text-white hover:opacity-90 glow-primary">
               Select file
             </Button>

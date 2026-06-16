@@ -201,27 +201,15 @@ function WatchContent({ video, upNext }: { video: WatchVideo; upNext: Video[] })
               >
                 <ArrowLeft className="h-4 w-4" />
               </Link>
-              <span className="text-sm font-bold text-white tracking-wide">Vidind</span>
+              <span className="text-sm font-bold text-white tracking-wide"></span>
             </div>
-            <div className="flex items-center gap-1 pointer-events-auto">
-              <button
-                aria-label="Captions"
-                className="h-9 w-9 rounded-full glass flex items-center justify-center text-white hover:text-accent transition-smooth"
-              >
-                <Captions className="h-4 w-4" />
-              </button>
-              <button
-                aria-label="More options"
-                className="h-9 w-9 rounded-full glass flex items-center justify-center text-white hover:text-accent transition-smooth"
-              >
-                <MoreVertical className="h-4 w-4" />
-              </button>
-            </div>
+
           </div>
 
           <VideoPlayer
             src={src}
             poster={video.thumbnail || undefined}
+            title={video.title}
             onWatchProgress={handleWatchProgress}
           />
         </div>
@@ -330,9 +318,8 @@ function WatchContent({ video, upNext }: { video: WatchVideo; upNext: Video[] })
             {formatCount(viewsCount)} views • {video.time}
           </p>
           <p
-            className={`mt-2 text-foreground/90 whitespace-pre-line ${
-              expanded ? "" : "line-clamp-2"
-            }`}
+            className={`mt-2 text-foreground/90 whitespace-pre-line ${expanded ? "" : "line-clamp-2"
+              }`}
           >
             {video.description ||
               "Welcome to Vidind — the next-gen video platform built for creators and viewers who want more than just another feed. Drop a like, subscribe, and let us know what you want to see next.\n\nTimestamps, links and credits below."}
@@ -388,11 +375,10 @@ function ActionPill({
   return (
     <button
       onClick={onClick}
-      className={`shrink-0 inline-flex items-center gap-1.5 sm:gap-2 rounded-full px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-smooth touch-manipulation ${
-        active
-          ? "bg-gradient-primary text-white glow-primary border-0"
-          : "glass hover:text-accent"
-      }`}
+      className={`shrink-0 inline-flex items-center gap-1.5 sm:gap-2 rounded-full px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-smooth touch-manipulation ${active
+        ? "bg-gradient-primary text-white glow-primary border-0"
+        : "glass hover:text-accent"
+        }`}
     >
       {icon}
       <span>{label}</span>
