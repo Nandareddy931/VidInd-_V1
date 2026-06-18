@@ -34,6 +34,8 @@ export function VideoPlayer({ src, poster, title, onWatchProgress }: Props) {
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState("0:00");
   const [duration, setDuration] = useState("0:00");
+  const [showSettings, setShowSettings] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
 
   const [tapHint, setTapHint] = useState<{
     side: "left" | "right";
@@ -211,6 +213,14 @@ export function VideoPlayer({ src, poster, title, onWatchProgress }: Props) {
   const fullscreen = () => {
     videoRef.current?.requestFullscreen();
   };
+  const changePlaybackSpeed = (speed: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.playbackRate = speed;
+    setPlaybackSpeed(speed);
+    setShowSettings(false);
+  };
 
   const showPlayerControls = () => {
     setShowControls(true);
@@ -314,7 +324,28 @@ export function VideoPlayer({ src, poster, title, onWatchProgress }: Props) {
           </div>
 
           <div className="flex items-center gap-4">
-            <button className="text-lg"><Settings size={22} /></button>
+            {showSettings && (
+              <div className="absolute bottom-12 right-10 z-30 w-36 rounded-lg bg-black/90 p-2 text-sm text-white shadow-lg">
+                <p className="mb-2 px-2 text-xs text-white/60">Speed</p>
+
+                {[0.5, 1, 1.25, 1.5, 2].map((speed) => (
+                  <button
+                    key={speed}
+                    onClick={() => changePlaybackSpeed(speed)}
+                    className={`block w-full rounded px-2 py-2 text-left ${playbackSpeed === speed ? "bg-white/20" : "hover:bg-white/10"
+                      }`}
+                  >
+                    {speed}x
+                  </button>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => setShowSettings((prev) => !prev)}
+              className="text-lg"
+            >
+              <Settings size={22} />
+            </button>
 
             <button onClick={fullscreen} className="text-xl">
               <Maximize size={22} />

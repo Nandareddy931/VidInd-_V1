@@ -13,6 +13,8 @@ export type DbVideo = {
   visibility: string;
   views: number;
   created_at: string;
+  channel_name?: string | null;
+  channel_avatar?: string | null;
 };
 
 function timeAgo(iso: string): string {
@@ -36,41 +38,79 @@ function formatViews(n: number): string {
   return `${n} views`;
 }
 
-export function dbVideoToCard(v: DbVideo, channelName?: string): Video & { videoUrl: string } {
-  const name = channelName || "You";
+export function dbVideoToCard(
+  v: DbVideo,
+): Video & { videoUrl: string; channelAvatar?: string } {
+  const name = v.channel_name || "VidInd Creator";
+
   return {
     id: v.id,
     title: v.title,
     thumbnail: v.thumbnail_url ?? "",
     channel: name,
-    channelInitial: (name[0] ?? "U").toUpperCase(),
+    channelInitial: (name[0] ?? "V").toUpperCase(),
+    channelAvatar: v.channel_avatar ?? "",
     views: formatViews(v.views ?? 0),
     time: timeAgo(v.created_at),
     duration: "",
-    // badge: "New",
     category: v.category || "All",
     videoUrl: v.video_url,
   };
 }
 
-/** Fetch all public videos (newest first). */
 export function usePublicVideos() {
   const [videos, setVideos] = useState<DbVideo[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
+
     (async () => {
-      const { data, error } = await supabase
+      const { data: videoData, error: videoError } = await supabase
         .from("videos")
         .select("*")
         .eq("visibility", "public")
         .order("created_at", { ascending: false })
         .limit(60);
+
       if (!active) return;
-      if (!error && data) setVideos(data as DbVideo[]);
+
+      if (videoError || !videoData) {
+        console.error("Videos error:", videoError);
+        setVideos([]);
+        setLoading(false);
+        return;
+      }
+
+      const userIds = [...new Set(videoData.map((v: any) => v.user_id))];
+
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("user_id, channel_name, avatar_url")
+        .in("user_id", userIds);
+
+      if (profileError) {
+        console.error("Profiles error:", profileError);
+      }
+
+      const profileMap = new Map(
+        (profileData || []).map((p: any) => [p.user_id, p])
+      );
+
+      const finalVideos = videoData.map((video: any) => {
+        const profile = profileMap.get(video.user_id);
+
+        return {
+          ...video,
+          channel_name: profile?.channel_name || "VidInd Creator",
+          channel_avatar: profile?.avatar_url || null,
+        };
+      });
+
+      setVideos(finalVideos as unknown as DbVideo[]);
       setLoading(false);
     })();
+
     return () => {
       active = false;
     };
@@ -79,7 +119,6 @@ export function usePublicVideos() {
   return { videos, loading };
 }
 
-/** Fetch the signed-in user's videos. */
 export function useMyVideos(userId?: string) {
   const [videos, setVideos] = useState<DbVideo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,18 +129,26 @@ export function useMyVideos(userId?: string) {
       setLoading(false);
       return;
     }
+
     let active = true;
     setLoading(true);
+
     (async () => {
       const { data, error } = await supabase
         .from("videos")
         .select("*")
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
+
       if (!active) return;
-      if (!error && data) setVideos(data as DbVideo[]);
+
+      if (!error && data) {
+        setVideos(data as unknown as DbVideo[]);
+      }
+
       setLoading(false);
     })();
+
     return () => {
       active = false;
     };

@@ -16,6 +16,7 @@ export type Video = {
   duration: string;
   badge?: "Trending" | "New" | "Live";
   category: string;
+  channelAvatar?: string | null;
 };
 
 export const categories = [

@@ -1,5 +1,5 @@
 import type { Video } from "@/lib/mock-data";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@tanstack/react-router";
 
@@ -42,10 +42,10 @@ export function VideoCard({ video, index = 0 }: { video: Video; index?: number }
         {video.badge && (
           <Badge
             className={`absolute top-2 left-2 border-0 backdrop-blur ${video.badge === "Trending"
-                ? "bg-gradient-primary text-white glow-primary"
-                : video.badge === "Live"
-                  ? "bg-destructive text-white"
-                  : "bg-accent text-accent-foreground"
+              ? "bg-gradient-primary text-white glow-primary"
+              : video.badge === "Live"
+                ? "bg-destructive text-white"
+                : "bg-accent text-accent-foreground"
               }`}
           >
             {video.badge}
@@ -55,6 +55,10 @@ export function VideoCard({ video, index = 0 }: { video: Video; index?: number }
 
       <div className="mt-2 sm:mt-3 flex gap-2 sm:gap-3">
         <Avatar className="h-8 w-8 sm:h-9 sm:w-9 ring-1 ring-primary/40">
+          {video.channelAvatar ? (
+            <AvatarImage src={video.channelAvatar} alt={video.channel} />
+          ) : null}
+
           <AvatarFallback className="bg-gradient-primary text-white text-sm font-semibold">
             {video.channelInitial}
           </AvatarFallback>
