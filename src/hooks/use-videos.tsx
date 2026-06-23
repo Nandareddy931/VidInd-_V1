@@ -40,8 +40,9 @@ function formatViews(n: number): string {
 
 export function dbVideoToCard(
   v: DbVideo,
+  overrideChannelName?: string,
 ): Video & { videoUrl: string; channelAvatar?: string } {
-  const name = v.channel_name || "VidInd Creator";
+  const name = overrideChannelName || v.channel_name || "VidInd Creator";
 
   return {
     id: v.id,

@@ -28,8 +28,10 @@ import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StudioIndexRouteImport } from './routes/studio.index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as WatchVideoIdRouteImport } from './routes/watch.$videoId'
 import { Route as StudioSettingsRouteImport } from './routes/studio.settings'
 import { Route as StudioMonetizationRouteImport } from './routes/studio.monetization'
@@ -37,6 +39,10 @@ import { Route as StudioContentRouteImport } from './routes/studio.content'
 import { Route as StudioCommentsRouteImport } from './routes/studio.comments'
 import { Route as StudioAnalyticsRouteImport } from './routes/studio.analytics'
 import { Route as ChannelUserIdRouteImport } from './routes/channel.$userId'
+import { Route as AdminVideosRouteImport } from './routes/admin.videos'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminCommentsRouteImport } from './routes/admin.comments'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -133,6 +139,11 @@ const DashboardRoute = DashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -142,6 +153,11 @@ const StudioIndexRoute = StudioIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => StudioRoute,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
 } as any)
 const WatchVideoIdRoute = WatchVideoIdRouteImport.update({
   id: '/watch/$videoId',
@@ -178,9 +194,30 @@ const ChannelUserIdRoute = ChannelUserIdRouteImport.update({
   path: '/channel/$userId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminVideosRoute = AdminVideosRouteImport.update({
+  id: '/videos',
+  path: '/videos',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCommentsRoute = AdminCommentsRouteImport.update({
+  id: '/comments',
+  path: '/comments',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/history': typeof HistoryRoute
@@ -200,6 +237,10 @@ export interface FileRoutesByFullPath {
   '/verify-email': typeof VerifyEmailRoute
   '/watch-later': typeof WatchLaterRoute
   '/welcome': typeof WelcomeRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/comments': typeof AdminCommentsRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/admin/videos': typeof AdminVideosRoute
   '/channel/$userId': typeof ChannelUserIdRoute
   '/studio/analytics': typeof StudioAnalyticsRoute
   '/studio/comments': typeof StudioCommentsRoute
@@ -207,6 +248,7 @@ export interface FileRoutesByFullPath {
   '/studio/monetization': typeof StudioMonetizationRoute
   '/studio/settings': typeof StudioSettingsRoute
   '/watch/$videoId': typeof WatchVideoIdRoute
+  '/admin/': typeof AdminIndexRoute
   '/studio/': typeof StudioIndexRoute
 }
 export interface FileRoutesByTo {
@@ -229,6 +271,10 @@ export interface FileRoutesByTo {
   '/verify-email': typeof VerifyEmailRoute
   '/watch-later': typeof WatchLaterRoute
   '/welcome': typeof WelcomeRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/comments': typeof AdminCommentsRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/admin/videos': typeof AdminVideosRoute
   '/channel/$userId': typeof ChannelUserIdRoute
   '/studio/analytics': typeof StudioAnalyticsRoute
   '/studio/comments': typeof StudioCommentsRoute
@@ -236,11 +282,13 @@ export interface FileRoutesByTo {
   '/studio/monetization': typeof StudioMonetizationRoute
   '/studio/settings': typeof StudioSettingsRoute
   '/watch/$videoId': typeof WatchVideoIdRoute
+  '/admin': typeof AdminIndexRoute
   '/studio': typeof StudioIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/history': typeof HistoryRoute
@@ -260,6 +308,10 @@ export interface FileRoutesById {
   '/verify-email': typeof VerifyEmailRoute
   '/watch-later': typeof WatchLaterRoute
   '/welcome': typeof WelcomeRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/comments': typeof AdminCommentsRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/admin/videos': typeof AdminVideosRoute
   '/channel/$userId': typeof ChannelUserIdRoute
   '/studio/analytics': typeof StudioAnalyticsRoute
   '/studio/comments': typeof StudioCommentsRoute
@@ -267,12 +319,14 @@ export interface FileRoutesById {
   '/studio/monetization': typeof StudioMonetizationRoute
   '/studio/settings': typeof StudioSettingsRoute
   '/watch/$videoId': typeof WatchVideoIdRoute
+  '/admin/': typeof AdminIndexRoute
   '/studio/': typeof StudioIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/dashboard'
     | '/forgot-password'
     | '/history'
@@ -292,6 +346,10 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/watch-later'
     | '/welcome'
+    | '/admin/analytics'
+    | '/admin/comments'
+    | '/admin/users'
+    | '/admin/videos'
     | '/channel/$userId'
     | '/studio/analytics'
     | '/studio/comments'
@@ -299,6 +357,7 @@ export interface FileRouteTypes {
     | '/studio/monetization'
     | '/studio/settings'
     | '/watch/$videoId'
+    | '/admin/'
     | '/studio/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -321,6 +380,10 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/watch-later'
     | '/welcome'
+    | '/admin/analytics'
+    | '/admin/comments'
+    | '/admin/users'
+    | '/admin/videos'
     | '/channel/$userId'
     | '/studio/analytics'
     | '/studio/comments'
@@ -328,10 +391,12 @@ export interface FileRouteTypes {
     | '/studio/monetization'
     | '/studio/settings'
     | '/watch/$videoId'
+    | '/admin'
     | '/studio'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/dashboard'
     | '/forgot-password'
     | '/history'
@@ -351,6 +416,10 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/watch-later'
     | '/welcome'
+    | '/admin/analytics'
+    | '/admin/comments'
+    | '/admin/users'
+    | '/admin/videos'
     | '/channel/$userId'
     | '/studio/analytics'
     | '/studio/comments'
@@ -358,11 +427,13 @@ export interface FileRouteTypes {
     | '/studio/monetization'
     | '/studio/settings'
     | '/watch/$videoId'
+    | '/admin/'
     | '/studio/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
   DashboardRoute: typeof DashboardRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   HistoryRoute: typeof HistoryRoute
@@ -521,6 +592,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -534,6 +612,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/studio/'
       preLoaderRoute: typeof StudioIndexRouteImport
       parentRoute: typeof StudioRoute
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/watch/$videoId': {
       id: '/watch/$videoId'
@@ -584,8 +669,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChannelUserIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/videos': {
+      id: '/admin/videos'
+      path: '/videos'
+      fullPath: '/admin/videos'
+      preLoaderRoute: typeof AdminVideosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/comments': {
+      id: '/admin/comments'
+      path: '/comments'
+      fullPath: '/admin/comments'
+      preLoaderRoute: typeof AdminCommentsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
+
+interface AdminRouteChildren {
+  AdminAnalyticsRoute: typeof AdminAnalyticsRoute
+  AdminCommentsRoute: typeof AdminCommentsRoute
+  AdminUsersRoute: typeof AdminUsersRoute
+  AdminVideosRoute: typeof AdminVideosRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAnalyticsRoute: AdminAnalyticsRoute,
+  AdminCommentsRoute: AdminCommentsRoute,
+  AdminUsersRoute: AdminUsersRoute,
+  AdminVideosRoute: AdminVideosRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface StudioRouteChildren {
   StudioAnalyticsRoute: typeof StudioAnalyticsRoute
@@ -610,6 +741,7 @@ const StudioRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
   DashboardRoute: DashboardRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   HistoryRoute: HistoryRoute,
