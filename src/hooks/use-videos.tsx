@@ -15,6 +15,7 @@ export type DbVideo = {
   created_at: string;
   channel_name?: string | null;
   channel_avatar?: string | null;
+  is_verified?: boolean | null;
 };
 
 function timeAgo(iso: string): string {
@@ -55,6 +56,7 @@ export function dbVideoToCard(
     time: timeAgo(v.created_at),
     duration: "",
     category: v.category || "All",
+    isVerified: !!v.is_verified,
     videoUrl: v.video_url,
   };
 }
@@ -87,7 +89,7 @@ export function usePublicVideos() {
 
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("user_id, channel_name, avatar_url")
+        .select("user_id, channel_name, avatar_url, is_verified")
         .in("user_id", userIds);
 
       if (profileError) {
@@ -103,8 +105,9 @@ export function usePublicVideos() {
 
         return {
           ...video,
-          channel_name: profile?.channel_name || "VidInd Creator",
+          channel_name: profile?.channel_name,
           channel_avatar: profile?.avatar_url || null,
+          is_verified: profile?.is_verified || false,
         };
       });
 

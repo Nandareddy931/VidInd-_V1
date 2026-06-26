@@ -8,6 +8,7 @@ import { SubscribeButton } from "@/components/SubscribeButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useMyVideos, dbVideoToCard } from "@/hooks/use-videos";
 import { cn } from "@/lib/utils";
+import VerifiedBadge from "@/components/VerifiedBadge";
 
 export const Route = createFileRoute("/channel/$userId")({
   head: () => ({ meta: [{ title: "Channel — Vidind" }] }),
@@ -20,6 +21,7 @@ type Profile = {
   avatar_url: string | null;
   subscribers_count: number;
   created_at: string;
+  is_verified: boolean | null;
 };
 
 function formatCount(n: number): string {
@@ -43,7 +45,7 @@ function ChannelPage() {
     (async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("user_id, display_name, avatar_url, subscribers_count, created_at")
+        .select("user_id, display_name, avatar_url, subscribers_count, created_at,is_verified")
         .eq("user_id", userId)
         .maybeSingle();
       if (active) {
@@ -63,9 +65,9 @@ function ChannelPage() {
   const totalViews = videos.reduce((s, v) => s + (v.views ?? 0), 0);
   const joined = profile?.created_at
     ? new Date(profile.created_at).toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "long",
-      })
+      year: "numeric",
+      month: "long",
+    })
     : "—";
 
   return (
@@ -94,7 +96,10 @@ function ChannelPage() {
               </div>
             ) : (
               <>
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold truncate">{displayName}</h1>
+                <h1 className="flex items-center gap-2 text-xl sm:text-2xl md:text-3xl font-extrabold truncate">
+                  <span className="truncate">{displayName}</span>
+                  {profile?.is_verified && <VerifiedBadge />}
+                </h1>
                 <p className="text-muted-foreground text-sm mt-1">
                   @{handle} • {formatCount(subscribers)}{" "}
                   {subscribers === 1 ? "subscriber" : "subscribers"} • {videos.length}{" "}
@@ -155,7 +160,14 @@ function ChannelPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
               {videos.map((v, i) => (
-                <VideoCard key={v.id} video={dbVideoToCard(v, displayName)} index={i} />
+                <VideoCard
+                  key={v.id}
+                  video={{
+                    ...dbVideoToCard(v, displayName),
+                    isVerified: !!profile?.is_verified,
+                  }}
+                  index={i}
+                />
               ))}
             </div>
           )
@@ -194,7 +206,10 @@ function ChannelPage() {
                 {initial}
               </AvatarFallback>
             </Avatar>
-            <span className="truncate text-sm font-semibold">{displayName}</span>
+            <span className="flex items-center gap-1 truncate text-sm font-semibold">
+              <span className="truncate">{displayName}</span>
+              {profile?.is_verified && <VerifiedBadge />}
+            </span>
           </Link>
           <SubscribeButton
             creatorId={userId}

@@ -39,6 +39,7 @@ import { Route as StudioContentRouteImport } from './routes/studio.content'
 import { Route as StudioCommentsRouteImport } from './routes/studio.comments'
 import { Route as StudioAnalyticsRouteImport } from './routes/studio.analytics'
 import { Route as ChannelUserIdRouteImport } from './routes/channel.$userId'
+import { Route as AdsCreateRouteImport } from './routes/ads.create'
 import { Route as AdminVideosRouteImport } from './routes/admin.videos'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminCommentsRouteImport } from './routes/admin.comments'
@@ -194,6 +195,11 @@ const ChannelUserIdRoute = ChannelUserIdRouteImport.update({
   path: '/channel/$userId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdsCreateRoute = AdsCreateRouteImport.update({
+  id: '/ads/create',
+  path: '/ads/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminVideosRoute = AdminVideosRouteImport.update({
   id: '/videos',
   path: '/videos',
@@ -241,6 +247,7 @@ export interface FileRoutesByFullPath {
   '/admin/comments': typeof AdminCommentsRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/videos': typeof AdminVideosRoute
+  '/ads/create': typeof AdsCreateRoute
   '/channel/$userId': typeof ChannelUserIdRoute
   '/studio/analytics': typeof StudioAnalyticsRoute
   '/studio/comments': typeof StudioCommentsRoute
@@ -275,6 +282,7 @@ export interface FileRoutesByTo {
   '/admin/comments': typeof AdminCommentsRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/videos': typeof AdminVideosRoute
+  '/ads/create': typeof AdsCreateRoute
   '/channel/$userId': typeof ChannelUserIdRoute
   '/studio/analytics': typeof StudioAnalyticsRoute
   '/studio/comments': typeof StudioCommentsRoute
@@ -312,6 +320,7 @@ export interface FileRoutesById {
   '/admin/comments': typeof AdminCommentsRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/videos': typeof AdminVideosRoute
+  '/ads/create': typeof AdsCreateRoute
   '/channel/$userId': typeof ChannelUserIdRoute
   '/studio/analytics': typeof StudioAnalyticsRoute
   '/studio/comments': typeof StudioCommentsRoute
@@ -350,6 +359,7 @@ export interface FileRouteTypes {
     | '/admin/comments'
     | '/admin/users'
     | '/admin/videos'
+    | '/ads/create'
     | '/channel/$userId'
     | '/studio/analytics'
     | '/studio/comments'
@@ -384,6 +394,7 @@ export interface FileRouteTypes {
     | '/admin/comments'
     | '/admin/users'
     | '/admin/videos'
+    | '/ads/create'
     | '/channel/$userId'
     | '/studio/analytics'
     | '/studio/comments'
@@ -420,6 +431,7 @@ export interface FileRouteTypes {
     | '/admin/comments'
     | '/admin/users'
     | '/admin/videos'
+    | '/ads/create'
     | '/channel/$userId'
     | '/studio/analytics'
     | '/studio/comments'
@@ -453,6 +465,7 @@ export interface RootRouteChildren {
   VerifyEmailRoute: typeof VerifyEmailRoute
   WatchLaterRoute: typeof WatchLaterRoute
   WelcomeRoute: typeof WelcomeRoute
+  AdsCreateRoute: typeof AdsCreateRoute
   ChannelUserIdRoute: typeof ChannelUserIdRoute
   WatchVideoIdRoute: typeof WatchVideoIdRoute
 }
@@ -669,6 +682,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChannelUserIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ads/create': {
+      id: '/ads/create'
+      path: '/ads/create'
+      fullPath: '/ads/create'
+      preLoaderRoute: typeof AdsCreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/videos': {
       id: '/admin/videos'
       path: '/videos'
@@ -761,6 +781,7 @@ const rootRouteChildren: RootRouteChildren = {
   VerifyEmailRoute: VerifyEmailRoute,
   WatchLaterRoute: WatchLaterRoute,
   WelcomeRoute: WelcomeRoute,
+  AdsCreateRoute: AdsCreateRoute,
   ChannelUserIdRoute: ChannelUserIdRoute,
   WatchVideoIdRoute: WatchVideoIdRoute,
 }

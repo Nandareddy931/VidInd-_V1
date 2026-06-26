@@ -17,6 +17,7 @@ export type Video = {
   badge?: "Trending" | "New" | "Live";
   category: string;
   channelAvatar?: string | null;
+  isVerified?: boolean;
 };
 
 export const categories = [

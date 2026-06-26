@@ -2,6 +2,7 @@ import type { Video } from "@/lib/mock-data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@tanstack/react-router";
+import VerifiedBadge from "@/components/VerifiedBadge";
 
 export function VideoCard({ video, index = 0 }: { video: Video; index?: number }) {
   return (
@@ -67,7 +68,10 @@ export function VideoCard({ video, index = 0 }: { video: Video; index?: number }
           <h3 className="line-clamp-2 text-xs sm:text-sm font-semibold leading-snug text-foreground group-hover:text-accent transition-smooth">
             {video.title}
           </h3>
-          <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-xs text-muted-foreground">{video.channel}</p>
+          <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-xs text-muted-foreground flex items-center gap-1">
+            <span className="truncate">{video.channel}</span>
+            {video.isVerified && <VerifiedBadge />}
+          </p>
           <p className="text-[11px] sm:text-xs text-muted-foreground">
             {video.views} • {video.time}
           </p>

@@ -2,7 +2,7 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import { VideoPlayer } from "@/components/VideoPlayer";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -65,7 +65,7 @@ export const Route = createFileRoute("/watch/$videoId")({
   component: WatchPage,
 });
 
-type WatchVideo = Video & { videoUrl?: string; description?: string; creatorId?: string };
+type WatchVideo = Video & { videoUrl?: string; description?: string; creatorId?: string; channelAvatar?: string; };
 
 function WatchPage() {
   const { videoId } = Route.useParams();
@@ -75,19 +75,35 @@ function WatchPage() {
   useEffect(() => {
     let active = true;
     setLoading(true);
+
     (async () => {
       const { data } = await supabase
         .from("videos")
         .select("*")
         .eq("id", videoId)
         .maybeSingle();
+
       if (!active) return;
+
       if (data) {
         const row = data as DbVideo;
-        const card = dbVideoToCard(row);
-        // Resolve to a signed URL since the videos bucket is private.
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("channel_name, avatar_url")
+          .eq("user_id", row.user_id)
+          .maybeSingle();
+
+        const card = dbVideoToCard({
+          ...row,
+          channel_name: profile?.channel_name,
+          channel_avatar: profile?.avatar_url || null,
+        });
+
         const playable = await resolveVideoUrl(row.video_url);
+
         if (!active) return;
+
         setDbVideo({
           ...card,
           videoUrl: playable,
@@ -97,8 +113,10 @@ function WatchPage() {
       } else {
         setDbVideo(null);
       }
+
       setLoading(false);
     })();
+
     return () => {
       active = false;
     };
@@ -234,6 +252,7 @@ function WatchContent({ video, upNext }: { video: WatchVideo; upNext: Video[] })
               className="flex items-center gap-3 min-w-0 group"
             >
               <Avatar className="h-9 w-9 sm:h-11 sm:w-11 ring-2 ring-primary/40 transition-smooth group-hover:ring-accent">
+                <AvatarImage src={video.channelAvatar || undefined} alt={video.channel} />
                 <AvatarFallback className="bg-gradient-primary text-white font-bold">
                   {video.channelInitial}
                 </AvatarFallback>
@@ -250,6 +269,7 @@ function WatchContent({ video, upNext }: { video: WatchVideo; upNext: Video[] })
           ) : (
             <div className="flex items-center gap-3 min-w-0">
               <Avatar className="h-9 w-9 sm:h-11 sm:w-11 ring-2 ring-primary/40">
+                <AvatarImage src={video.channelAvatar ?? undefined} alt={video.channel} />
                 <AvatarFallback className="bg-gradient-primary text-white font-bold">
                   {video.channelInitial}
                 </AvatarFallback>

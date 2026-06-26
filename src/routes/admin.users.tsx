@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Ban, CheckCircle } from "lucide-react";
+import { Search, Ban, CheckCircle, BadgeCheck } from "lucide-react";
 import { toast } from "sonner";
 const PAGE_SIZE = 10;
 export const Route = createFileRoute("/admin/users")({
@@ -17,6 +17,7 @@ type UserProfile = {
     role?: string | null;
     is_banned?: boolean | null;
     created_at: string;
+    is_verified?: boolean | null;
 };
 
 function AdminUsers() {
@@ -68,6 +69,20 @@ function AdminUsers() {
         toast.success(user.is_banned ? "User unbanned" : "User banned");
         loadUsers();
     }
+    async function toggleVerified(user: UserProfile) {
+        const { error } = await supabase
+            .from("profiles")
+            .update({ is_verified: !user.is_verified } as any)
+            .eq("id", user.id);
+
+        if (error) {
+            toast.error("Failed to update verification");
+            return;
+        }
+
+        toast.success(user.is_verified ? "Verification removed" : "Creator verified");
+        loadUsers();
+    }
 
     useEffect(() => {
         loadUsers();
@@ -89,9 +104,10 @@ function AdminUsers() {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         onKeyDown={(e) => {
-                            if (e.key === "Enter")
+                            if (e.key === "Enter") {
                                 setPage(0);
-                            loadUsers(0);
+                                loadUsers(0);
+                            }
                         }}
                         placeholder="Search users..."
                         className="w-full rounded-xl bg-white/5 border border-white/10 py-3 pl-10 pr-4 outline-none focus:border-purple-500"
@@ -156,10 +172,21 @@ function AdminUsers() {
                                 )}
                             </div>
 
-                            <div>
+                            <div className="flex flex-col gap-2">
+                                <button
+                                    onClick={() => toggleVerified(user)}
+                                    className={`flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm ${user.is_verified
+                                        ? "bg-blue-500/20 text-blue-400"
+                                        : "bg-white/5 text-slate-300"
+                                        }`}
+                                >
+                                    <BadgeCheck size={16} />
+                                    {user.is_verified ? "Verified" : "Verify"}
+                                </button>
+
                                 <button
                                     onClick={() => toggleBan(user)}
-                                    className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm ${user.is_banned
+                                    className={`flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm ${user.is_banned
                                         ? "bg-green-500/20 text-green-400"
                                         : "bg-red-500/20 text-red-400"
                                         }`}
