@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { dbVideoToCard, type DbVideo } from "@/hooks/use-videos";
 import { useVideoEngagement } from "@/hooks/use-engagement";
 import { resolveVideoUrl } from "@/lib/video-url";
+import { getAdForVideo } from "@/lib/ad-delivery";
 import {
   ArrowLeft,
   MoreVertical,
@@ -173,6 +174,9 @@ function WatchPage() {
 }
 
 function WatchContent({ video, upNext }: { video: WatchVideo; upNext: Video[] }) {
+  const [ad, setAd] = useState<any>(null);
+  const [showAd, setShowAd] = useState(false);
+  const [canSkip, setCanSkip] = useState(false);
   const [disliked, setDisliked] = useState(false);
   const [saved, setSaved] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -188,7 +192,15 @@ function WatchContent({ video, upNext }: { video: WatchVideo; upNext: Video[] })
     viewsCount,
     recordView,
   } = useVideoEngagement(video.id, video.creatorId);
-
+  useEffect(() => {
+    getAdForVideo((video as any).category).then((data) => {
+      if (!data) return;
+      setAd(data);
+      setShowAd(true);
+      setCanSkip(false);
+      setTimeout(() => setCanSkip(true), 5000);
+    });
+  }, [video.id]);
   // Throttle progress checks — only call recordView when threshold could be met.
   const lastCheckRef = useRef(0);
   const handleWatchProgress = (watched: number, duration: number) => {
@@ -224,12 +236,41 @@ function WatchContent({ video, upNext }: { video: WatchVideo; upNext: Video[] })
 
           </div>
 
-          <VideoPlayer
-            src={src}
-            poster={video.thumbnail || undefined}
-            title={video.title}
-            onWatchProgress={handleWatchProgress}
-          />
+          {showAd && ad ? (
+            <div className="relative overflow-hidden rounded-2xl bg-black aspect-video">
+              <video
+                src={ad.media_url}
+                autoPlay
+                playsInline
+                className="h-full w-full object-contain"
+                onEnded={() => setShowAd(false)}
+              />
+
+              <div className="absolute left-3 top-3 rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white">
+                Sponsored • {ad.business_name}
+              </div>
+
+              {canSkip ? (
+                <button
+                  onClick={() => setShowAd(false)}
+                  className="absolute bottom-4 right-4 rounded-lg bg-white px-4 py-2 text-sm font-bold text-black"
+                >
+                  Skip Ad
+                </button>
+              ) : (
+                <div className="absolute bottom-4 right-4 rounded-lg bg-black/70 px-4 py-2 text-sm text-white">
+                  Skip in 5s
+                </div>
+              )}
+            </div>
+          ) : (
+            <VideoPlayer
+              src={src}
+              poster={video.thumbnail || undefined}
+              title={video.title}
+              onWatchProgress={handleWatchProgress}
+            />
+          )}
         </div>
 
         {/* Title + meta */}

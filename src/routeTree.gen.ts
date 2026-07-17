@@ -31,6 +31,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StudioIndexRouteImport } from './routes/studio.index'
+import { Route as AdsIndexRouteImport } from './routes/ads/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as WatchVideoIdRouteImport } from './routes/watch.$videoId'
 import { Route as StudioSettingsRouteImport } from './routes/studio.settings'
@@ -39,11 +40,12 @@ import { Route as StudioContentRouteImport } from './routes/studio.content'
 import { Route as StudioCommentsRouteImport } from './routes/studio.comments'
 import { Route as StudioAnalyticsRouteImport } from './routes/studio.analytics'
 import { Route as ChannelUserIdRouteImport } from './routes/channel.$userId'
-import { Route as AdsCreateRouteImport } from './routes/ads.create'
+import { Route as AdsCreateRouteImport } from './routes/ads/create'
 import { Route as AdminVideosRouteImport } from './routes/admin.videos'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminCommentsRouteImport } from './routes/admin.comments'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
+import { Route as AdminAdsRouteImport } from './routes/admin.ads'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -155,6 +157,11 @@ const StudioIndexRoute = StudioIndexRouteImport.update({
   path: '/',
   getParentRoute: () => StudioRoute,
 } as any)
+const AdsIndexRoute = AdsIndexRouteImport.update({
+  id: '/ads/',
+  path: '/ads/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -220,6 +227,11 @@ const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAdsRoute = AdminAdsRouteImport.update({
+  id: '/ads',
+  path: '/ads',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -243,6 +255,7 @@ export interface FileRoutesByFullPath {
   '/verify-email': typeof VerifyEmailRoute
   '/watch-later': typeof WatchLaterRoute
   '/welcome': typeof WelcomeRoute
+  '/admin/ads': typeof AdminAdsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/comments': typeof AdminCommentsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -256,6 +269,7 @@ export interface FileRoutesByFullPath {
   '/studio/settings': typeof StudioSettingsRoute
   '/watch/$videoId': typeof WatchVideoIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/ads/': typeof AdsIndexRoute
   '/studio/': typeof StudioIndexRoute
 }
 export interface FileRoutesByTo {
@@ -278,6 +292,7 @@ export interface FileRoutesByTo {
   '/verify-email': typeof VerifyEmailRoute
   '/watch-later': typeof WatchLaterRoute
   '/welcome': typeof WelcomeRoute
+  '/admin/ads': typeof AdminAdsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/comments': typeof AdminCommentsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -291,6 +306,7 @@ export interface FileRoutesByTo {
   '/studio/settings': typeof StudioSettingsRoute
   '/watch/$videoId': typeof WatchVideoIdRoute
   '/admin': typeof AdminIndexRoute
+  '/ads': typeof AdsIndexRoute
   '/studio': typeof StudioIndexRoute
 }
 export interface FileRoutesById {
@@ -316,6 +332,7 @@ export interface FileRoutesById {
   '/verify-email': typeof VerifyEmailRoute
   '/watch-later': typeof WatchLaterRoute
   '/welcome': typeof WelcomeRoute
+  '/admin/ads': typeof AdminAdsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/comments': typeof AdminCommentsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -329,6 +346,7 @@ export interface FileRoutesById {
   '/studio/settings': typeof StudioSettingsRoute
   '/watch/$videoId': typeof WatchVideoIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/ads/': typeof AdsIndexRoute
   '/studio/': typeof StudioIndexRoute
 }
 export interface FileRouteTypes {
@@ -355,6 +373,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/watch-later'
     | '/welcome'
+    | '/admin/ads'
     | '/admin/analytics'
     | '/admin/comments'
     | '/admin/users'
@@ -368,6 +387,7 @@ export interface FileRouteTypes {
     | '/studio/settings'
     | '/watch/$videoId'
     | '/admin/'
+    | '/ads/'
     | '/studio/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -390,6 +410,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/watch-later'
     | '/welcome'
+    | '/admin/ads'
     | '/admin/analytics'
     | '/admin/comments'
     | '/admin/users'
@@ -403,6 +424,7 @@ export interface FileRouteTypes {
     | '/studio/settings'
     | '/watch/$videoId'
     | '/admin'
+    | '/ads'
     | '/studio'
   id:
     | '__root__'
@@ -427,6 +449,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/watch-later'
     | '/welcome'
+    | '/admin/ads'
     | '/admin/analytics'
     | '/admin/comments'
     | '/admin/users'
@@ -440,6 +463,7 @@ export interface FileRouteTypes {
     | '/studio/settings'
     | '/watch/$videoId'
     | '/admin/'
+    | '/ads/'
     | '/studio/'
   fileRoutesById: FileRoutesById
 }
@@ -468,6 +492,7 @@ export interface RootRouteChildren {
   AdsCreateRoute: typeof AdsCreateRoute
   ChannelUserIdRoute: typeof ChannelUserIdRoute
   WatchVideoIdRoute: typeof WatchVideoIdRoute
+  AdsIndexRoute: typeof AdsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -626,6 +651,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudioIndexRouteImport
       parentRoute: typeof StudioRoute
     }
+    '/ads/': {
+      id: '/ads/'
+      path: '/ads'
+      fullPath: '/ads/'
+      preLoaderRoute: typeof AdsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/': {
       id: '/admin/'
       path: '/'
@@ -717,10 +749,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAnalyticsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/ads': {
+      id: '/admin/ads'
+      path: '/ads'
+      fullPath: '/admin/ads'
+      preLoaderRoute: typeof AdminAdsRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminAdsRoute: typeof AdminAdsRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminCommentsRoute: typeof AdminCommentsRoute
   AdminUsersRoute: typeof AdminUsersRoute
@@ -729,6 +769,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAdsRoute: AdminAdsRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminCommentsRoute: AdminCommentsRoute,
   AdminUsersRoute: AdminUsersRoute,
@@ -784,6 +825,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdsCreateRoute: AdsCreateRoute,
   ChannelUserIdRoute: ChannelUserIdRoute,
   WatchVideoIdRoute: WatchVideoIdRoute,
+  AdsIndexRoute: AdsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { adsSupabase } from "../integrations/supabase/adsClient";
-import { DateRange } from "hls.js";
+import { adsSupabase } from "@/integrations/supabase/adsClient";
 
-export const Route = createFileRoute("/ads/create")({ component: AdsCreate });
+
+export const Route = createFileRoute("/ads/create")({ component: AdsCreate, });
 
 function AdsCreate() {
     const [loading, setLoading] = useState(false);
@@ -57,6 +57,7 @@ function AdsCreate() {
             if (crErr) throw crErr;
 
             alert("Ad submitted for admin review");
+            window.location.href = "/ads";
         } catch (err: any) {
             console.error("Ad submit error:", err);
             alert(err?.message || JSON.stringify(err) || "Failed to submit ad");

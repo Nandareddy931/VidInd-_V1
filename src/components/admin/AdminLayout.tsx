@@ -11,6 +11,7 @@ import {
     LogOut,
     Menu,
     X,
+    Megaphone
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -21,7 +22,9 @@ const navItems = [
     { name: "Videos", to: "/admin/videos", icon: Video },
     { name: "Comments", to: "/admin/comments", icon: MessageSquare },
     { name: "Reports", to: "/admin/reports", icon: Flag },
+    { name: "Ads Approval", to: "/admin/ads", icon: Megaphone },
     { name: "Analytics", to: "/admin/analytics", icon: BarChart3 },
+
 ];
 
 export default function AdminLayout() {
