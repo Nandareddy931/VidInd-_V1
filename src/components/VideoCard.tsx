@@ -1,4 +1,4 @@
-import type { Video } from "@/lib/mock-data";
+import { videos, type Video } from "@/lib/mock-data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@tanstack/react-router";
@@ -73,7 +73,7 @@ export function VideoCard({ video, index = 0 }: { video: Video; index?: number }
             {video.isVerified && <VerifiedBadge />}
           </p>
           <p className="text-[11px] sm:text-xs text-muted-foreground">
-            {video.views} • {video.time}
+            {video.views_count ?? 0} views • {video.time}
           </p>
         </div>
       </div>

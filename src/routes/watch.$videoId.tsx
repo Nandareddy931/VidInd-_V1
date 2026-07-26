@@ -485,7 +485,7 @@ function UpNextItem({ video }: { video: Video }) {
         <p className="mt-1 text-xs text-muted-foreground truncate">
           {video.channel}
         </p>
-        <p className="text-xs text-muted-foreground">{video.views}</p>
+        <p className="text-xs text-muted-foreground">{video.views_count}</p>
       </div>
     </Link>
   );

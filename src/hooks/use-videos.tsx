@@ -11,7 +11,7 @@ export type DbVideo = {
   video_url: string;
   thumbnail_url: string | null;
   visibility: string;
-  views: number;
+  views_count: number;
   created_at: string;
   channel_name?: string | null;
   channel_avatar?: string | null;
@@ -43,7 +43,7 @@ export function dbVideoToCard(
   v: DbVideo,
   overrideChannelName?: string,
 ): Video & { videoUrl: string; channelAvatar?: string } {
-  const name = overrideChannelName || v.channel_name || "VidInd Creator";
+  const name = overrideChannelName || v.channel_name || "";
 
   return {
     id: v.id,
@@ -52,7 +52,7 @@ export function dbVideoToCard(
     channel: name,
     channelInitial: (name[0] ?? "V").toUpperCase(),
     channelAvatar: v.channel_avatar ?? "",
-    views: formatViews(v.views ?? 0),
+    views_count: (v.views_count ?? 0),
     time: timeAgo(v.created_at),
     duration: "",
     category: v.category || "All",

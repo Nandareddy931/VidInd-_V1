@@ -11,7 +11,7 @@ export type Video = {
   thumbnail: string;
   channel: string;
   channelInitial: string;
-  views: string;
+  views_count?: number;
   time: string;
   duration: string;
   badge?: "Trending" | "New" | "Live";
@@ -39,7 +39,7 @@ export const videos: Video[] = [
     thumbnail: gaming,
     channel: "NeonVision",
     channelInitial: "N",
-    views: "1.2M views",
+    views_count: 1200000,
     time: "2 days ago",
     duration: "12:04",
     badge: "Trending",
@@ -51,7 +51,7 @@ export const videos: Video[] = [
     thumbnail: music,
     channel: "PulseLab",
     channelInitial: "P",
-    views: "843K views",
+    views_count: 843000,
     time: "5 hours ago",
     duration: "08:45",
     badge: "New",
@@ -63,7 +63,7 @@ export const videos: Video[] = [
     thumbnail: tech,
     channel: "CodeOrbit",
     channelInitial: "C",
-    views: "412K views",
+    views_count: 412000,
     time: "1 week ago",
     duration: "22:18",
     category: "Education",
@@ -74,7 +74,7 @@ export const videos: Video[] = [
     thumbnail: travel,
     channel: "SkyChasers",
     channelInitial: "S",
-    views: "2.4M views",
+    views_count: 2400000,
     time: "3 weeks ago",
     duration: "06:30",
     badge: "Trending",
@@ -86,7 +86,7 @@ export const videos: Video[] = [
     thumbnail: fitness,
     channel: "GlowFit",
     channelInitial: "G",
-    views: "156K views",
+    views_count: 156000,
     time: "1 day ago",
     duration: "10:02",
     badge: "New",
@@ -98,7 +98,7 @@ export const videos: Video[] = [
     thumbnail: food,
     channel: "Kitchen Bloom",
     channelInitial: "K",
-    views: "98K views",
+    views_count: 98000,
     time: "4 days ago",
     duration: "14:22",
     category: "Food",
@@ -109,7 +109,7 @@ export const videos: Video[] = [
     thumbnail: gaming,
     channel: "PixelTheory",
     channelInitial: "P",
-    views: "678K views",
+    views_count: 678000,
     time: "6 days ago",
     duration: "18:55",
     category: "Gaming",
@@ -120,7 +120,7 @@ export const videos: Video[] = [
     thumbnail: music,
     channel: "ChillCircuit",
     channelInitial: "C",
-    views: "1.8M views",
+    views_count: 1800000,
     time: "2 weeks ago",
     duration: "45:10",
     badge: "Trending",
