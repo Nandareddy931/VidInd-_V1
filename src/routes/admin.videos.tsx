@@ -16,7 +16,7 @@ type AdminVideo = {
     thumbnail_url: string | null;
     video_url: string | null;
     user_id: string;
-    views_count?: number | null;
+    views?: number | null;
     likes_count?: number | null;
     comments_count?: number | null;
     is_hidden?: boolean | null;
@@ -162,7 +162,7 @@ function AdminVideos() {
                                 </div>
                             </div>
 
-                            <div>{video.views_count || 0}</div>
+                            <div>{video.views || 0}</div>
                             <div>{video.likes_count || 0}</div>
 
                             <div>

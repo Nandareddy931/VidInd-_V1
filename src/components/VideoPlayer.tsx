@@ -20,8 +20,6 @@ type Props = {
 export function VideoPlayer({ src, poster, title, onWatchProgress }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const hlsRef = useRef<Hls | null>(null);
-  const watchedRef = useRef(0);
-  const lastTickRef = useRef<number | null>(null);
   const tapCountRef = useRef(0);
   const tapTimerRef = useRef<NodeJS.Timeout | null>(null);
   const singleTapTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -78,7 +76,6 @@ export function VideoPlayer({ src, poster, title, onWatchProgress }: Props) {
 
     const onPlay = () => {
       setPlaying(true);
-      lastTickRef.current = Date.now();
       showPlayerControls();
     };
 
@@ -93,9 +90,7 @@ export function VideoPlayer({ src, poster, title, onWatchProgress }: Props) {
       controlsTimerRef.current = setTimeout(() => {
         setShowControls(false);
       }, 3000);
-
-      lastTickRef.current = null;
-      onWatchProgress?.(watchedRef.current, video.duration || 0);
+      onWatchProgress?.(video.currentTime, video.duration || 0);
     };
 
     const onTimeUpdate = () => {
@@ -105,16 +100,11 @@ export function VideoPlayer({ src, poster, title, onWatchProgress }: Props) {
       setCurrentTime(formatTime(video.currentTime));
       setDuration(formatTime(video.duration));
 
-      if (lastTickRef.current !== null && !video.paused) {
-        const now = Date.now();
-        const delta = (now - lastTickRef.current) / 1000;
-        lastTickRef.current = now;
-
-        if (delta > 0 && delta < 2) {
-          watchedRef.current += delta;
-        }
-
-        onWatchProgress?.(watchedRef.current, video.duration || 0);
+      if (!video.paused) {
+        onWatchProgress?.(
+          video.currentTime,
+          video.duration
+        );
       }
     };
     const onWaiting = () => {

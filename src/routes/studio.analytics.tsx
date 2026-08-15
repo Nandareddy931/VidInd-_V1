@@ -72,9 +72,8 @@ function AnalyticsPage() {
             <button
               key={d}
               onClick={() => setRange(d as Range)}
-              className={`px-3 py-1.5 rounded-lg transition-smooth ${
-                range === d ? "bg-gradient-primary text-white" : "text-muted-foreground hover:text-foreground"
-              }`}
+              className={`px-3 py-1.5 rounded-lg transition-smooth ${range === d ? "bg-gradient-primary text-white" : "text-muted-foreground hover:text-foreground"
+                }`}
             >
               {d}d
             </button>

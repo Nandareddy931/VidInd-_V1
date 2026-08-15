@@ -25,6 +25,7 @@ import {
   Send,
 } from "lucide-react";
 import { Comments } from "@/components/Comments";
+import { ShareModal } from "@/components/ShareModal";
 
 export const Route = createFileRoute("/watch/$videoId")({
   head: ({ params }) => ({
@@ -181,6 +182,9 @@ function WatchContent({ video, upNext }: { video: WatchVideo; upNext: Video[] })
   const [saved, setSaved] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [autoplay, setAutoplay] = useState(true);
+  const [currentTime, setCurrentTime] = useState(0);
+  const viewSessionCounted = useRef(false);
+  const lastWatched = useRef(0);
 
   const {
     liked,
@@ -191,7 +195,9 @@ function WatchContent({ video, upNext }: { video: WatchVideo; upNext: Video[] })
     toggleSubscribe,
     viewsCount,
     recordView,
-  } = useVideoEngagement(video.id, video.creatorId);
+  } = useVideoEngagement(video.id, video.creatorId, video.views);
+
+
   useEffect(() => {
     getAdForVideo((video as any).category).then((data) => {
       if (!data) return;
@@ -201,13 +207,31 @@ function WatchContent({ video, upNext }: { video: WatchVideo; upNext: Video[] })
       setTimeout(() => setCanSkip(true), 5000);
     });
   }, [video.id]);
+
   // Throttle progress checks — only call recordView when threshold could be met.
   const lastCheckRef = useRef(0);
+
   const handleWatchProgress = (watched: number, duration: number) => {
+    setCurrentTime(watched);
+
     const now = Date.now();
+
+
     if (now - lastCheckRef.current < 1000) return;
+
     lastCheckRef.current = now;
-    if (watched >= 5 || (duration > 0 && watched / duration >= 0.3)) {
+
+    const shouldCount =
+      watched >= 5 ||
+      (duration > 0 && watched / duration >= 0.3);
+
+    if (shouldCount) {
+      console.log("🎯 Recording view:", {
+        videoId: video.id,
+        watched,
+        duration,
+      });
+
       recordView(watched, duration);
     }
   };
@@ -233,7 +257,6 @@ function WatchContent({ video, upNext }: { video: WatchVideo; upNext: Video[] })
               </Link>
               <span className="text-sm font-bold text-white tracking-wide"></span>
             </div>
-
           </div>
 
           {showAd && ad ? (
@@ -363,7 +386,17 @@ function WatchContent({ video, upNext }: { video: WatchVideo; upNext: Video[] })
             icon={<ThumbsDown className="h-4 w-4" />}
             label="Dislike"
           />
-          <ActionPill icon={<Share2 className="h-4 w-4" />} label="Share" />
+
+          {/* Share Modal – wrapped button styled like ActionPill */}
+          <ShareModal videoId={video.id} videoTitle={video.title} currentTime={currentTime}>
+            <button
+              className="shrink-0 inline-flex items-center gap-1.5 sm:gap-2 rounded-full px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-smooth touch-manipulation glass hover:text-accent"
+            >
+              <Share2 className="h-4 w-4" />
+              <span>Share</span>
+            </button>
+          </ShareModal>
+
           <ActionPill icon={<Download className="h-4 w-4" />} label="Download" />
           <ActionPill
             active={saved}
@@ -379,8 +412,7 @@ function WatchContent({ video, upNext }: { video: WatchVideo; upNext: Video[] })
             {formatCount(viewsCount)} views • {video.time}
           </p>
           <p
-            className={`mt-2 text-foreground/90 whitespace-pre-line ${expanded ? "" : "line-clamp-2"
-              }`}
+            className={`mt-2 text-foreground/90 whitespace-pre-line ${expanded ? "" : "line-clamp-2"}`}
           >
             {video.description ||
               "Welcome to Vidind — the next-gen video platform built for creators and viewers who want more than just another feed. Drop a like, subscribe, and let us know what you want to see next.\n\nTimestamps, links and credits below."}
@@ -417,11 +449,14 @@ function WatchContent({ video, upNext }: { video: WatchVideo; upNext: Video[] })
   );
 }
 
-function formatCount(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return String(n);
+function formatCount(n?: number | null): string {
+  const num = Number(n ?? 0);
+  if (isNaN(num)) return "0";
+  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`;
+  if (num >= 1_000) return `${(num / 1_000).toFixed(1)}K`;
+  return String(num);
 }
+
 function ActionPill({
   icon,
   label,
@@ -485,7 +520,9 @@ function UpNextItem({ video }: { video: Video }) {
         <p className="mt-1 text-xs text-muted-foreground truncate">
           {video.channel}
         </p>
-        <p className="text-xs text-muted-foreground">{video.views_count}</p>
+        <p className="text-xs text-muted-foreground">
+          {formatCount(video.views ?? 0)} views • {video.time}
+        </p>
       </div>
     </Link>
   );

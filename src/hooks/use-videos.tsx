@@ -11,7 +11,7 @@ export type DbVideo = {
   video_url: string;
   thumbnail_url: string | null;
   visibility: string;
-  views_count: number;
+  views: number;
   created_at: string;
   channel_name?: string | null;
   channel_avatar?: string | null;
@@ -52,7 +52,7 @@ export function dbVideoToCard(
     channel: name,
     channelInitial: (name[0] ?? "V").toUpperCase(),
     channelAvatar: v.channel_avatar ?? "",
-    views_count: (v.views_count ?? 0),
+    views: Number(v.views ?? (v as any).views_count ?? 0),
     time: timeAgo(v.created_at),
     duration: "",
     category: v.category || "All",

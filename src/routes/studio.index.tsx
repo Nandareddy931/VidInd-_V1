@@ -105,9 +105,8 @@ function StudioDashboard() {
               <button
                 key={d}
                 onClick={() => setRange(d as 7 | 30)}
-                className={`px-3 py-1.5 rounded-lg transition-smooth ${
-                  range === d ? "bg-gradient-primary text-white" : "text-muted-foreground hover:text-foreground"
-                }`}
+                className={`px-3 py-1.5 rounded-lg transition-smooth ${range === d ? "bg-gradient-primary text-white" : "text-muted-foreground hover:text-foreground"
+                  }`}
               >
                 {d}d
               </button>
@@ -172,9 +171,8 @@ function StudioDashboard() {
               key={v.id}
               to="/watch/$videoId"
               params={{ videoId: v.id }}
-              className={`flex items-center gap-3 p-3 ${
-                i !== recent.length - 1 ? "border-b border-glass-border" : ""
-              } hover:bg-white/5 transition-smooth`}
+              className={`flex items-center gap-3 p-3 ${i !== recent.length - 1 ? "border-b border-glass-border" : ""
+                } hover:bg-white/5 transition-smooth`}
             >
               {v.thumbnail_url ? (
                 <img

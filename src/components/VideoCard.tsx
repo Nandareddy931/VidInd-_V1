@@ -73,7 +73,7 @@ export function VideoCard({ video, index = 0 }: { video: Video; index?: number }
             {video.isVerified && <VerifiedBadge />}
           </p>
           <p className="text-[11px] sm:text-xs text-muted-foreground">
-            {video.views_count ?? 0} views • {video.time}
+            {video.views ?? 0} views • {video.time}
           </p>
         </div>
       </div>

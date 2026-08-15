@@ -8,14 +8,23 @@ import { toast } from "sonner";
  * state + counts, and a one-shot `recordView` that satisfies the
  * "5s OR 30%" rule. Optimistic UI throughout.
  */
-export function useVideoEngagement(videoId: string, creatorId?: string) {
+export function useVideoEngagement(
+  videoId: string,
+  creatorId?: string,
+  initialViews: number = 0,
+) {
   const { user, isAuthenticated } = useAuth();
   const [likesCount, setLikesCount] = useState(0);
   const [liked, setLiked] = useState(false);
   const [subscribersCount, setSubscribersCount] = useState(0);
   const [subscribed, setSubscribed] = useState(false);
-  const [viewsCount, setViewsCount] = useState(0);
-  const viewRecorded = useRef(false);
+  const [viewsCount, setViewsCount] = useState(initialViews || 0);
+
+  useEffect(() => {
+    if (typeof initialViews === "number" && initialViews > 0) {
+      setViewsCount(initialViews);
+    }
+  }, [initialViews]);
 
   // Initial fetch — counts + my interaction state
   useEffect(() => {
@@ -25,31 +34,31 @@ export function useVideoEngagement(videoId: string, creatorId?: string) {
       const [{ data: video }, likeRow, subRow] = await Promise.all([
         supabase
           .from("videos")
-          .select("likes_count, views_count, user_id")
+          .select("likes_count, views, user_id")
           .eq("id", videoId)
           .maybeSingle(),
         user
           ? supabase
-              .from("likes")
-              .select("id")
-              .eq("video_id", videoId)
-              .eq("user_id", user.id)
-              .maybeSingle()
+            .from("likes")
+            .select("id")
+            .eq("video_id", videoId)
+            .eq("user_id", user.id)
+            .maybeSingle()
           : Promise.resolve({ data: null } as { data: null }),
         user && creatorId
           ? supabase
-              .from("subscriptions")
-              .select("id")
-              .eq("creator_id", creatorId)
-              .eq("subscriber_id", user.id)
-              .maybeSingle()
+            .from("subscriptions")
+            .select("id")
+            .eq("creator_id", creatorId)
+            .eq("subscriber_id", user.id)
+            .maybeSingle()
           : Promise.resolve({ data: null } as { data: null }),
       ]);
 
       if (!active) return;
       if (video) {
         setLikesCount(Number(video.likes_count ?? 0));
-        setViewsCount(Number(video.views_count ?? 0));
+        setViewsCount(Number(video.views ?? (video as any).views_count ?? initialViews ?? 0));
       }
       setLiked(!!likeRow?.data);
       setSubscribed(!!subRow?.data);
@@ -68,7 +77,7 @@ export function useVideoEngagement(videoId: string, creatorId?: string) {
     return () => {
       active = false;
     };
-  }, [videoId, user, creatorId]);
+  }, [videoId, user, creatorId, initialViews]);
 
   const toggleLike = useCallback(async () => {
     if (!isAuthenticated || !user) {
@@ -145,31 +154,60 @@ export function useVideoEngagement(videoId: string, creatorId?: string) {
    */
   const recordView = useCallback(
     async (watchTimeSec: number, durationSec: number) => {
-      if (viewRecorded.current) return;
       const valid =
         watchTimeSec >= 5 ||
         (durationSec > 0 && watchTimeSec / durationSec >= 0.3);
-      if (!valid) return;
 
-      viewRecorded.current = true;
+      if (!valid || !videoId) return;
+
+      console.log("🎯 Recording view:", {
+        videoId,
+        watched: watchTimeSec,
+        duration: durationSec,
+      });
+
       const device =
-        typeof navigator !== "undefined" && /Mobi|Android/i.test(navigator.userAgent)
+        typeof navigator !== "undefined" &&
+          /Mobi|Android/i.test(navigator.userAgent)
           ? "mobile"
           : "desktop";
 
-      const { error } = await supabase.from("video_views").insert({
-        video_id: videoId,
-        user_id: user?.id ?? null,
-        watch_time: Math.round(watchTimeSec),
-        device,
-      });
-      if (error) {
-        viewRecorded.current = false;
+      // 1. Store view event
+      const { error: viewError } = await supabase
+        .from("video_views")
+        .insert({
+          video_id: videoId,
+          user_id: user?.id ?? null,
+          watch_time: Math.round(watchTimeSec),
+          device,
+        });
+
+      if (viewError) {
+        console.error("❌ video_views insert failed:", viewError);
         return;
       }
-      setViewsCount((c) => c + 1);
+
+      // 2. Increment videos.views using RPC
+      const { data, error: countError } = await supabase.rpc(
+        "increment_video_views",
+        {
+          p_video_id: videoId,
+        }
+      );
+
+      console.log("🟢 RPC RESULT:", { data, countError });
+
+      if (countError) {
+        console.error("🔴 RPC FAILED:", countError);
+        return;
+      }
+
+      // 3. Update UI immediately
+      setViewsCount((current) => current + 1);
+
+      console.log("✅ View counted successfully:", videoId);
     },
-    [videoId, user],
+    [videoId, user]
   );
 
   return {
